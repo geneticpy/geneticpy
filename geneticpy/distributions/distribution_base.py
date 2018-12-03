@@ -8,3 +8,6 @@ class DistributionBase(ABC):
 
     def pull_value(self):
         pass
+
+    def pull_constrained_value(self, low, high):
+        pass

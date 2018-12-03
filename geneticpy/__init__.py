@@ -1,3 +1,5 @@
+from geneticpy.distributions import *
 
-def optimize():
+
+def optimize(fn, param_space):
     pass

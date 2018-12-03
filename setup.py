@@ -14,7 +14,7 @@ setup(
     license='MIT',
     author='Brandon Schabell',
     author_email='brandonschabell@gmail.com',
-    description='An optimization package based on a genetic algorithm.',
+    description='Hyperparameter optimization based on a genetic algorithm.',
     long_description=readme(),
     classifiers=[
         'Development Status :: 0.0.1 - Alpha',
