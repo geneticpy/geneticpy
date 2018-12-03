@@ -18,11 +18,10 @@ setup(
     description='Hyperparameter optimization based on a genetic algorithm.',
     long_description=readme(),
     classifiers=[
-        'Development Status :: 0.0.1 - Alpha',
         'License :: MIT License',
         'Programming Language :: Python :: 3.7',
         'Topic :: Genetic Algorithm :: Hyperparameter Optimization',
-      ],
+    ],
     python_requires='~=3.4',
     install_requires=['numpy'],
     tests_require=['pytest', 'pytest-runner']
