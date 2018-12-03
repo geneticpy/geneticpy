@@ -1,9 +1,11 @@
 from setuptools import setup, find_packages
 
 
-def readme():
-    with open('README.md') as f:
-        return f.read()
+# read the contents of your README file
+from os import path
+this_directory = path.abspath(path.dirname(__file__))
+with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
+    long_description = f.read()
 
 
 setup(
@@ -16,7 +18,8 @@ setup(
     author='Brandon Schabell',
     author_email='brandonschabell@gmail.com',
     description='Hyperparameter optimization based on a genetic algorithm.',
-    long_description=readme(),
+    long_description=this_directory,
+    long_description_content_type='text/markdown',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',

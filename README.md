@@ -1,18 +1,20 @@
-# geneticpy
-Hyperparameter optimization based on a genetic algorithm.
-
-Stable Release: N/A
-
-Beta Release: v0.0.1
+# GeneticPy
 
 [![Build Status](https://travis-ci.com/geneticpy/geneticpy.svg?branch=master)](https://travis-ci.com/geneticpy/geneticpy)
 
-Install Using:
-```
+GeneticPy is an optimizer that uses a genetic algorithm to quickly search through custom parameter spaces for optimal solutions.
+
+### Installation
+
+GeneticPy requires Python 3.4+
+
+```sh
 pip install geneticpy
 ```
 
-Example Usage:
+### Example Usage:
+
+A brief example to get you started is included below:
 
 ```python
 def loss_function(params):
@@ -27,3 +29,7 @@ param_space = {'type': geneticpy.ChoiceDistribution(choice_list=['add', 'multipl
 
 best_params, loss = geneticpy.optimize(loss_function, param_space, size=200, generation_count=500, verbose=False)
 ```
+
+### Contact
+
+Please feel free to email me at brandonschabell@gmail.com with any questions or feedback.
