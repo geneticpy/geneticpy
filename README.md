@@ -7,6 +7,11 @@ Beta Release: v0.0.1
 
 [![Build Status](https://travis-ci.com/geneticpy/geneticpy.svg?branch=master)](https://travis-ci.com/geneticpy/geneticpy)
 
+Install Using:
+```
+pip install geneticpy
+```
+
 Example Usage:
 
 ```python
