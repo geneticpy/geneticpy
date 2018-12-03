@@ -22,6 +22,7 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Topic :: Genetic Algorithm :: Hyperparameter Optimization',
       ],
+    python_requires='~=3.4',
     install_requires=['numpy'],
     tests_require=['pytest', 'pytest-runner']
 )
