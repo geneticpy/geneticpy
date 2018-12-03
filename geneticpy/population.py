@@ -10,7 +10,7 @@ class Population:
         assert isinstance(params, dict)
         for k, v in params.items():
             assert isinstance(v, DistributionBase)
-        self.population = []
+
         self.fn = fn
         self.params = params
         self.size = size
@@ -20,6 +20,7 @@ class Population:
         self.retain_percentage = retain_percentage
         self.verbose = verbose
         self.grades = None
+        self.population = [self.create_random_set() for _ in range(self.size)]
 
     def evolve(self):
         pop_count = len(self.population)
@@ -45,20 +46,23 @@ class Population:
                 new_indiv = deepcopy(indiv)
                 m_count += 1
                 keep.append(new_indiv.mutate())
-        print("Mutated {} sets.".format(m_count))
+        if self.verbose:
+            print("Mutated {} sets.".format(m_count))
 
-        for i in range(int(self.count * self.percentage_to_randomly_spawn)):
+        for i in range(int(self.size * self.percentage_to_randomly_spawn)):
             keep.append(self.create_random_set())
             s_count += 1
-        print("Spawned {} sets.".format(s_count))
+        if self.verbose:
+            print("Spawned {} sets.".format(s_count))
 
-        while len(keep) < self.count:
+        while len(keep) < self.size:
             set1 = random.randint(0, retained_length - 1)
             set2 = random.randint(0, retained_length - 1)
             if set1 != set2:
                 b_count += 1
                 keep.append(keep[set1].breed(keep[set2]))
-        print("Bred {} sets.".format(b_count))
+        if self.verbose:
+            print("Bred {} sets.".format(b_count))
         self.population = keep
 
     def get_final_scores(self):
@@ -79,6 +83,9 @@ class Population:
 
     def get_top_score(self):
         return self.population[0].get_score()
+
+    def get_top_params(self):
+        return self.population[0].params
 
     def create_random_set(self):
         random_params = {k: v.pull_value() for k, v in self.params.items()}

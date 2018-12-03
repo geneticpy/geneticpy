@@ -25,6 +25,8 @@ class UniformDistribution(DistributionBase):
 
 class GaussianDistribution(DistributionBase):
     def __init__(self, mean, standard_deviation, q=None, low=None, high=None):
+        assert mean is not None and standard_deviation is not None
+        assert standard_deviation > 0
         assert low is None or high is None or (low < high)
         self.mean = mean
         self.standard_deviation = standard_deviation
@@ -43,14 +45,16 @@ class GaussianDistribution(DistributionBase):
         return value
 
     def pull_constrained_value(self, low, high):
+        low = min(low, high)
+        high = max(low, high)
         constrained_mean = (high + low) / 2
         new_mean = (self.mean + constrained_mean) / 2
         new_standard_deviation = high - low
         value = np.random.normal(new_mean, new_standard_deviation)
         if value < low:
-            return self.pull_constrained_value(low, high)  # Outside of range, try again
+            return low
         if value > high:
-            return self.pull_constrained_value(low, high)  # Outside of range, try again
+            return high
         if self.q is not None:
             value = round(value / self.q) * self.q
         return value
@@ -58,13 +62,14 @@ class GaussianDistribution(DistributionBase):
 
 class ChoiceDistribution(DistributionBase):
     def __init__(self, choice_list, probabilities='uniform'):
+        assert isinstance(choice_list, list)
         self.choice_list = choice_list
         self.probabilities = probabilities
 
     def pull_value(self):
         return np.random.choice(a=self.choice_list, size=1,
-                                p=None if self.probabilities == 'uniform' else self.probabilities)
+                                p=None if self.probabilities == 'uniform' else self.probabilities)[0]
 
     def pull_constrained_value(self, low, high):
         """The 'low' and 'high' arguments can be used to represent two possible choices."""
-        return np.random.choice(a=[low, high], size=1)
+        return np.random.choice(a=[low, high], size=1)[0]

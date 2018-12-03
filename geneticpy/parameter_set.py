@@ -15,7 +15,7 @@ class ParameterSet:
         cls = self.__class__
         result = cls.__new__(cls)
         memo[id(self)] = result
-        result.params = self.params
+        result.params = deepcopy(self.params)
         result.param_space = self.param_space
         result.fn = self.fn
         result.maximize_fn = self.maximize_fn
@@ -24,13 +24,14 @@ class ParameterSet:
 
     def mutate(self):
         self.score = None
-        param = random.choice(self.param_space.keys())
+        keys = list(self.param_space.keys())
+        param = random.choice(keys)
         self.params[param] = self.param_space[param].pull_value()
         return self
 
     def breed(self, mate):
         child = deepcopy(self)
-        child.params = {k: child.param_space.pull_constrained_value(v, mate.params[k]) for k, v in child.params.items()}
+        child.params = {k: child.param_space[k].pull_constrained_value(v, mate.params[k]) for k, v in child.params.items()}
         return child
 
     def get_score(self):
