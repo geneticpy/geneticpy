@@ -10,15 +10,15 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='geneticpy',
-    version='0.0.2',
+    version='0.1.0',
     packages=find_packages(),
     url='https://github.com/geneticpy/geneticpy',
-    download_url='https://github.com/geneticpy/geneticpy/archive/v0.0.2.tar.gz',
+    download_url='https://github.com/geneticpy/geneticpy/archive/v0.1.0.tar.gz',
     license='MIT',
     author='Brandon Schabell',
     author_email='brandonschabell@gmail.com',
     description='Hyperparameter optimization based on a genetic algorithm.',
-    long_description=this_directory,
+    long_description=long_description,
     long_description_content_type='text/markdown',
     classifiers=[
         'Development Status :: 4 - Beta',
