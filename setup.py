@@ -10,18 +10,18 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='geneticpy',
-    version='0.1.0',
+    version='0.1.1',
     packages=find_packages(),
     url='https://github.com/geneticpy/geneticpy',
-    download_url='https://github.com/geneticpy/geneticpy/archive/v0.1.0.tar.gz',
+    download_url='https://github.com/geneticpy/geneticpy/archive/v0.1.1.tar.gz',
     license='MIT',
     author='Brandon Schabell',
     author_email='brandonschabell@gmail.com',
-    description='Hyperparameter optimization based on a genetic algorithm.',
+    description='GeneticPy is an optimizer that uses a genetic algorithm to quickly search through custom parameter spaces for optimal solutions.',
     long_description=long_description,
     long_description_content_type='text/markdown',
     classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: MIT License',
