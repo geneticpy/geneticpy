@@ -8,7 +8,7 @@ def readme():
 
 setup(
     name='geneticpy',
-    version='0.0.1.dev',
+    version='0.0.1',
     packages=find_packages(),
     url='https://github.com/geneticpy/geneticpy',
     license='MIT',
