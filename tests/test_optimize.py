@@ -11,7 +11,9 @@ def test_optimize_simple():
                    'y': UniformDistribution(0, 1000000, 1000)}
 
     best_params, score = optimize(fn, param_space, size=200, generation_count=500, verbose=False)
-    assert ['x', 'y'] == list(best_params.keys())
+    keys = list(best_params.keys())
+    keys.sort()
+    assert ['x', 'y'] == keys
     assert best_params['x'] < 0.01
     assert best_params['y'] == 0
     assert score < 0.01
@@ -32,9 +34,9 @@ def test_optimize_complicated():
                    'c': ChoiceDistribution([1000, 3000, 5000], [0.1, 0.7, 0.2])}
 
     best_params, score = optimize(fn, param_space, size=200, generation_count=500, verbose=False)
-    print(best_params)
-    print(score)
-    assert ['x', 'y', 'xq', 'c'] == list(best_params.keys())
+    keys = list(best_params.keys())
+    keys.sort()
+    assert ['c', 'x', 'xq', 'y'] == keys
     assert best_params['x'] < 0.01
     assert 18 < best_params['y'] < 20
     assert 1000 == best_params['c']
