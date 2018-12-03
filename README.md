@@ -30,6 +30,9 @@ param_space = {'type': geneticpy.ChoiceDistribution(choice_list=['add', 'multipl
 best_params, loss = geneticpy.optimize(loss_function, param_space, size=200, generation_count=500, verbose=False)
 ```
 
+### PyPi Project
+https://pypi.org/project/geneticpy/
+
 ### Contact
 
 Please feel free to email me at brandonschabell@gmail.com with any questions or feedback.
