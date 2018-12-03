@@ -11,6 +11,7 @@ setup(
     version='0.0.1',
     packages=find_packages(),
     url='https://github.com/geneticpy/geneticpy',
+    download_url='https://github.com/geneticpy/geneticpy/archive/v0.0.1.tar.gz',
     license='MIT',
     author='Brandon Schabell',
     author_email='brandonschabell@gmail.com',
