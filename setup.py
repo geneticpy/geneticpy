@@ -10,10 +10,10 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='geneticpy',
-    version='0.0.1',
+    version='0.0.2',
     packages=find_packages(),
     url='https://github.com/geneticpy/geneticpy',
-    download_url='https://github.com/geneticpy/geneticpy/archive/v0.0.1.tar.gz',
+    download_url='https://github.com/geneticpy/geneticpy/archive/v0.0.2.tar.gz',
     license='MIT',
     author='Brandon Schabell',
     author_email='brandonschabell@gmail.com',
