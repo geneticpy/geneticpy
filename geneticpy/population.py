@@ -8,8 +8,6 @@ class Population:
     def __init__(self, fn, params, size, percentage_to_randomly_spawn=0.05, mutate_chance=0.25, retain_percentage=0.6,
                  maximize_fn=False, tqdm_obj=None):
         assert isinstance(params, dict)
-        for k, v in params.items():
-            assert isinstance(v, DistributionBase)
 
         self.fn = fn
         self.params = params
@@ -72,6 +70,6 @@ class Population:
         return self.population[0].params
 
     def create_random_set(self):
-        random_params = {k: v.pull_value() for k, v in self.params.items()}
+        random_params = {k: v.pull_value() if isinstance(v, DistributionBase) else v for k, v in self.params.items()}
         return ParameterSet(params=random_params, param_space=self.params, fn=self.fn, maximize_fn=self.maximize_fn,
                             tqdm_obj=self.tqdm_obj)

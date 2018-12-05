@@ -1,5 +1,6 @@
 import random
 from copy import deepcopy
+from geneticpy.distributions import DistributionBase
 
 
 class ParameterSet:
@@ -26,14 +27,18 @@ class ParameterSet:
 
     def mutate(self):
         self.score = None
-        keys = list(self.param_space.keys())
+        keys = [k for k, v in self.param_space.items() if isinstance(v, DistributionBase)]
         param = random.choice(keys)
         self.params[param] = self.param_space[param].pull_value()
         return self
 
     def breed(self, mate):
         child = deepcopy(self)
-        child.params = {k: child.param_space[k].pull_constrained_value(v, mate.params[k]) for k, v in child.params.items()}
+        child.params = {
+            k: child.param_space[k].pull_constrained_value(v, mate.params[k])
+            if isinstance(v, DistributionBase) else
+            v for k, v in child.params.items()
+        }
         return child
 
     def get_score(self):
