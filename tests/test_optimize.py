@@ -1,6 +1,5 @@
 from geneticpy import optimize
 from geneticpy.distributions import *
-import pytest
 
 
 def test_optimize_simple():
