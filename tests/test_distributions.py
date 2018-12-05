@@ -117,7 +117,7 @@ class TestExponentialDistribution:
     def test_exponential_distribution_valid_low_and_high(self):
         dist = ExponentialDistribution(.1, low=0.01, high=1)
         value = dist.pull_value()
-        assert 0.01 < value < 1
+        assert 0.01 <= value <= 1
 
     def test_exponential_distribution_valid_q(self):
         dist = ExponentialDistribution(10, q=1)
