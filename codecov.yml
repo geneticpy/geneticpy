@@ -1,0 +1,4 @@
+ignore:
+  - "setup.py"
+  - "tests/*"
+  - "geneticpy/distributions/distribution_base.py"
