@@ -17,6 +17,7 @@ script:
   - pytest
 
 after_success:
-  - if [[ $ENV == python=3.7* ]]; then
-      coveralls;
-    fi
+#  - if [[ $ENV == python=3.7* ]]; then
+#      coveralls;
+#    fi
+  - coveralls

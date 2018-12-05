@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.com/geneticpy/geneticpy.svg?branch=master)](https://travis-ci.com/geneticpy/geneticpy)
 [![PyPI version](https://badge.fury.io/py/geneticpy.svg)](https://badge.fury.io/py/geneticpy)
+[![Coverage Status](https://coveralls.io/repos/github/geneticpy/geneticpy/badge.svg?branch=badge-updating)](https://coveralls.io/github/geneticpy/geneticpy?branch=badge-updating)
 
 GeneticPy is an optimizer that uses a genetic algorithm to quickly search through custom parameter spaces for optimal solutions.
 
