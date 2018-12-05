@@ -6,21 +6,18 @@ class UniformDistribution(DistributionBase):
     def __init__(self, low, high, q=None):
         assert low is not None and high is not None
         assert low < high
+        assert q is None or q > 0
         self.low = low
         self.high = high
         self.q = q
 
     def pull_value(self):
         value = np.random.uniform(self.low, self.high)
-        if self.q is not None:
-            value = round(value / self.q) * self.q
-        return value
+        return self.q_round(value)
 
     def pull_constrained_value(self, low, high):
         value = np.random.uniform(low, high)
-        if self.q is not None:
-            value = round(value / self.q) * self.q
-        return value
+        return self.q_round(value)
 
 
 class GaussianDistribution(DistributionBase):
@@ -28,6 +25,7 @@ class GaussianDistribution(DistributionBase):
         assert mean is not None and standard_deviation is not None
         assert standard_deviation > 0
         assert low is None or high is None or (low < high)
+        assert q is None or q > 0
         self.mean = mean
         self.standard_deviation = standard_deviation
         self.q = q
@@ -40,9 +38,7 @@ class GaussianDistribution(DistributionBase):
             return self.pull_value()  # Outside of range, try again
         if self.high is not None and value > self.high:
             return self.pull_value()  # Outside of range, try again
-        if self.q is not None:
-            value = round(value / self.q) * self.q
-        return value
+        return self.q_round(value)
 
     def pull_constrained_value(self, low, high):
         low = min(low, high)
@@ -55,9 +51,7 @@ class GaussianDistribution(DistributionBase):
             return low
         if value > high:
             return high
-        if self.q is not None:
-            value = round(value / self.q) * self.q
-        return value
+        return self.q_round(value)
 
 
 class ChoiceDistribution(DistributionBase):
@@ -73,3 +67,25 @@ class ChoiceDistribution(DistributionBase):
     def pull_constrained_value(self, low, high):
         """The 'low' and 'high' arguments can be used to represent two possible choices."""
         return np.random.choice(a=[low, high], size=1)[0]
+
+
+class ExponentialDistribution(DistributionBase):
+    def __init__(self, scale=1.0, q=None, low=None, high=None):
+        assert scale > 0
+        assert q is None or q > 0
+        assert low is None or high is None or (low < high)
+        assert high is None or high > 0
+        self.scale = scale
+        self.q = q
+
+    def pull_value(self):
+        value = np.random.exponential(scale=self.scale, size=None)
+        return self.q_round(value)
+
+    def pull_constrained_value(self, low, high):
+        value = self.pull_value()
+        if value > high:
+            value = high
+        if value < low:
+            value = low
+        return self.q_round(value)

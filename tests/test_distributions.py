@@ -1,4 +1,4 @@
-from geneticpy.distributions import UniformDistribution, GaussianDistribution, ChoiceDistribution
+from geneticpy.distributions import *
 import pytest
 
 
@@ -112,3 +112,36 @@ def test_choice_distribution_floats():
     dist = ChoiceDistribution([-3.0, 5.0])
     value = dist.pull_value()
     assert value in [-3.0, 5.0]
+
+
+def test_exponential_distribution_zero_scale():
+    with pytest.raises(AssertionError) as e:
+        dist = ExponentialDistribution(scale=0)
+
+
+def test_exponential_distribution_negative_scale():
+    with pytest.raises(AssertionError) as e:
+        dist = ExponentialDistribution(scale=-1)
+
+
+def test_exponential_distribution_low_less_than_high():
+    with pytest.raises(AssertionError):
+        dist = ExponentialDistribution(1, low=2, high=1)
+
+
+def test_exponential_distribution_valid_low_and_high():
+    dist = ExponentialDistribution(.1, low=0.01, high=1)
+    value = dist.pull_value()
+    assert 0.01 < value < 1
+
+
+def test_exponential_distribution_valid_q():
+    dist = ExponentialDistribution(10, q=1)
+    value = dist.pull_value()
+    assert isinstance(value, int)
+
+
+def test_exponential_distribution():
+    dist = ExponentialDistribution(scale=0.00000001)
+    value = dist.pull_value()
+    assert 0 < value < 1

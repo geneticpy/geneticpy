@@ -11,3 +11,8 @@ class DistributionBase(ABC):
 
     def pull_constrained_value(self, low, high):
         pass
+
+    def q_round(self, value):
+        if self.q is not None:
+            value = round(value / self.q) * self.q
+        return value
