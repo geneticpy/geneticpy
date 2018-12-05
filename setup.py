@@ -10,7 +10,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='geneticpy',
-    version='0.1.1',
+    version='1.0.0-dev',
     packages=find_packages(),
     url='https://github.com/geneticpy/geneticpy',
     download_url='https://github.com/geneticpy/geneticpy/archive/v0.1.1.tar.gz',
