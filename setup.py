@@ -35,5 +35,6 @@ setup(
     python_requires='~=3.4',
     install_requires=['numpy',
                       'tqdm'],
-    tests_require=['pytest', 'pytest-runner']
+    tests_require=['pytest',
+                   'pytest-runner']
 )
