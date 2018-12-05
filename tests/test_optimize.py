@@ -52,7 +52,7 @@ def test_verbose_mode(capsys):
 
     best_params, score = optimize(fn, param_space, size=200, generation_count=500, verbose=True)
     out, err = capsys.readouterr()
-    assert 'Optimizing parameters: 100%|██████████| 40400/40400' in err
+    assert 'Optimizing parameters: ' in err
 
 
 def test_verbose_mode_false(capsys):

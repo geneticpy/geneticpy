@@ -15,9 +15,9 @@ install:
 
 script:
   - pytest
+  - coverage run --source=geneticpy setup.py test
 
 after_success:
-#  - if [[ $ENV == python=3.7* ]]; then
-#      coveralls;
-#    fi
-  - coveralls
+  - if [[ $ENV == python=3.7* ]]; then
+      coveralls;
+    fi
