@@ -66,7 +66,7 @@ class Population:
         return self.population[0].get_score()
 
     def get_top_params(self):
-        return self.population[0].params
+        return self.population[0].get_params()
 
     def create_random_set(self):
         random_params = {k: v.pull_value() if isinstance(v, DistributionBase) else v for k, v in self.params.items()}
