@@ -7,8 +7,16 @@ python:
   - "3.6"
   - "3.7"
 
+before_install:
+  pip install coveralls
+
 install:
   - pip install -e .[tests]
 
 script:
   - pytest
+
+after_success:
+  - if [[ $ENV == python=3.7* ]]; then
+      coveralls;
+    fi
