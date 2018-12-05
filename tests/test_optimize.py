@@ -10,13 +10,14 @@ def test_optimize_simple():
     param_space = {'x': UniformDistribution(0, 1),
                    'y': UniformDistribution(0, 1000000, 1000)}
 
-    best_params, score = optimize(fn, param_space, size=200, generation_count=500, verbose=False)
+    best_params, score, time = optimize(fn, param_space, size=200, generation_count=500, verbose=False)
     keys = list(best_params.keys())
     keys.sort()
     assert ['x', 'y'] == keys
     assert best_params['x'] < 0.01
     assert best_params['y'] == 0
     assert score < 0.01
+    assert 0 < time < 5
 
 
 def test_optimize_complicated():
@@ -33,13 +34,14 @@ def test_optimize_complicated():
                    'xq': UniformDistribution(0, 100, q=5),
                    'c': ChoiceDistribution([1000, 3000, 5000], [0.1, 0.7, 0.2])}
 
-    best_params, score = optimize(fn, param_space, size=200, generation_count=500, verbose=False)
+    best_params, score, time = optimize(fn, param_space, size=200, generation_count=500, verbose=False)
     keys = list(best_params.keys())
     keys.sort()
     assert ['c', 'x', 'xq', 'y'] == keys
     assert best_params['x'] < 0.01
     assert 18 < best_params['y'] < 20
     assert 1000 == best_params['c']
+    assert 0 < time < 5
 
 
 def test_verbose_mode(capsys):
@@ -50,7 +52,7 @@ def test_verbose_mode(capsys):
     param_space = {'x': UniformDistribution(0, 1),
                    'y': UniformDistribution(0, 1000000, 1000)}
 
-    best_params, score = optimize(fn, param_space, size=200, generation_count=500, verbose=True)
+    optimize(fn, param_space, size=200, generation_count=500, verbose=True)
     out, err = capsys.readouterr()
     assert 'Optimizing parameters: ' in err
 
@@ -63,7 +65,7 @@ def test_verbose_mode_false(capsys):
     param_space = {'x': UniformDistribution(0, 1),
                    'y': UniformDistribution(0, 1000000, 1000)}
 
-    best_params, score = optimize(fn, param_space, size=200, generation_count=500, verbose=False)
+    optimize(fn, param_space, size=200, generation_count=500, verbose=False)
     out, err = capsys.readouterr()
     assert 'Optimizing parameters: ' not in err
 
@@ -81,7 +83,7 @@ def test_constant_parameter():
                    'zzzz': None,
                    'zzzzz': [1, 2, None, {}, [1, 2]]}
 
-    best_params, score = optimize(fn, param_space, size=200, generation_count=500, verbose=False)
+    best_params, score, time = optimize(fn, param_space, size=200, generation_count=500, verbose=False)
     keys = list(best_params.keys())
     keys.sort()
     assert ['x', 'y', 'z', 'zz', 'zzz', 'zzzz', 'zzzzz'] == keys
@@ -93,3 +95,4 @@ def test_constant_parameter():
     assert best_params['zzzz'] is None
     assert best_params['zzzzz'] == [1, 2, None, {}, [1, 2]]
     assert score < -49
+    assert 0 < time < 5
