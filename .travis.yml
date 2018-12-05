@@ -18,6 +18,4 @@ script:
   - pytest --cov=./
 
 after_success:
-  - if [[ $ENV == python=3.7* ]]; then
-      codecov;
-    fi
+  - codecov
