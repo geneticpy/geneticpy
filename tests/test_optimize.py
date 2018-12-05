@@ -1,5 +1,6 @@
 from geneticpy import optimize
 from geneticpy.distributions import *
+import pytest
 
 
 def test_optimize_simple():
@@ -40,3 +41,29 @@ def test_optimize_complicated():
     assert best_params['x'] < 0.01
     assert 18 < best_params['y'] < 20
     assert 1000 == best_params['c']
+
+
+def test_verbose_mode(capsys):
+    def fn(params):
+        loss = params['x'] + params['y']
+        return loss
+
+    param_space = {'x': UniformDistribution(0, 1),
+                   'y': UniformDistribution(0, 1000000, 1000)}
+
+    best_params, score = optimize(fn, param_space, size=200, generation_count=500, verbose=True)
+    out, err = capsys.readouterr()
+    assert 'Optimizing parameters: 100%|██████████| 40400/40400' in err
+
+
+def test_verbose_mode_false(capsys):
+    def fn(params):
+        loss = params['x'] + params['y']
+        return loss
+
+    param_space = {'x': UniformDistribution(0, 1),
+                   'y': UniformDistribution(0, 1000000, 1000)}
+
+    best_params, score = optimize(fn, param_space, size=200, generation_count=500, verbose=False)
+    out, err = capsys.readouterr()
+    assert 'Optimizing parameters: ' not in err

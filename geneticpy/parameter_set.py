@@ -4,11 +4,12 @@ from copy import deepcopy
 
 class ParameterSet:
 
-    def __init__(self, params, param_space, fn, maximize_fn):
+    def __init__(self, params, param_space, fn, maximize_fn, tqdm_obj):
         self.params = params
         self.param_space = param_space
         self.fn = fn
         self.maximize_fn = maximize_fn
+        self.tqdm_obj = tqdm_obj
         self.score = None
 
     def __deepcopy__(self, memo):
@@ -20,6 +21,7 @@ class ParameterSet:
         result.fn = self.fn
         result.maximize_fn = self.maximize_fn
         result.score = None
+        result.tqdm_obj = self.tqdm_obj
         return result
 
     def mutate(self):
@@ -37,6 +39,8 @@ class ParameterSet:
     def get_score(self):
         if self.score is None:
             self.score = self.fn(self.params)
+            if self.tqdm_obj is not None:
+                self.tqdm_obj.update()
         return self.score
 
     def get_params(self):
