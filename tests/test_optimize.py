@@ -67,3 +67,30 @@ def test_verbose_mode_false(capsys):
     best_params, score = optimize(fn, param_space, size=200, generation_count=500, verbose=False)
     out, err = capsys.readouterr()
     assert 'Optimizing parameters: ' not in err
+
+
+def test_constant_parameter():
+    def fn(params):
+        loss = params['x'] + params['y'] + params['z']
+        return loss
+
+    param_space = {'x': UniformDistribution(0, 1),
+                   'y': UniformDistribution(0, 1000000, 1000),
+                   'z': -50,
+                   'zz': 'test',
+                   'zzz': {},
+                   'zzzz': None,
+                   'zzzzz': [1, 2, None, {}, [1, 2]]}
+
+    best_params, score = optimize(fn, param_space, size=200, generation_count=500, verbose=False)
+    keys = list(best_params.keys())
+    keys.sort()
+    assert ['x', 'y', 'z', 'zz', 'zzz', 'zzzz', 'zzzzz'] == keys
+    assert best_params['x'] < 0.01
+    assert best_params['y'] == 0
+    assert best_params['z'] == -50
+    assert best_params['zz'] == 'test'
+    assert best_params['zzz'] == {}
+    assert best_params['zzzz'] is None
+    assert best_params['zzzzz'] == [1, 2, None, {}, [1, 2]]
+    assert score < -49
