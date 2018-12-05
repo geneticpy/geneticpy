@@ -35,6 +35,11 @@ class TestUniformDistribution:
         assert value <= 10
         assert isinstance(value, int)
 
+    def test_uniform_distribution_constrained(self):
+        dist = UniformDistribution(0, 5)
+        value = dist.pull_constrained_value(4.9999, 5)
+        assert 4.9999 <= value <= 5
+
 
 class TestGaussianDistribution:
     def test_gaussian_distribution_no_mean(self):
@@ -74,6 +79,16 @@ class TestGaussianDistribution:
         assert value == 7
         assert isinstance(value, int)
 
+    def test_gaussian_distribution_constrained_q(self):
+        dist = GaussianDistribution(-2, 1, q=1)
+        value = dist.pull_constrained_value(1, 3)
+        assert isinstance(value, int)
+
+    def test_gaussian_distribution_constrained_same(self):
+        dist = GaussianDistribution(7, 0.00001)
+        value = dist.pull_constrained_value(6.9999, 7.0001)
+        assert 7 == pytest.approx(value, 0.1)
+
 
 class TestChoiceDistribution:
     def test_choice_distribution_no_list(self):
@@ -99,6 +114,11 @@ class TestChoiceDistribution:
         dist = ChoiceDistribution([-3.0, 5.0])
         value = dist.pull_value()
         assert value in [-3.0, 5.0]
+
+    def test_choice_distribution_constrained(self):
+        dist = ChoiceDistribution([x for x in range(99999)])
+        value = dist.pull_constrained_value(144, 17711)
+        assert value in [144, 17711]
 
 
 class TestExponentialDistribution:
@@ -134,6 +154,11 @@ class TestExponentialDistribution:
         value = dist.pull_value()
         assert value <= 0.05
 
+    def test_exponential_distribution_pull_constrained(self):
+        dist = ExponentialDistribution(scale=1)
+        value = dist.pull_constrained_value(0.8, 0.81)
+        assert 0.8 <= value <= 0.81
+
 
 class TestLogNormalDistribution:
     def test_log_normal_distribution_zero_sigma(self):
@@ -162,3 +187,8 @@ class TestLogNormalDistribution:
         dist = LogNormalDistribution(mean=0, sigma=1, low=15)
         value = dist.pull_value()
         assert value >= 15
+
+    def test_log_normal_distribution_pull_constrained(self):
+        dist = LogNormalDistribution(mean=0, sigma=1)
+        value = dist.pull_constrained_value(0.8, 0.81)
+        assert 0.8 <= value <= 0.81
