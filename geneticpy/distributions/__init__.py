@@ -34,10 +34,7 @@ class GaussianDistribution(DistributionBase):
 
     def pull_value(self):
         value = np.random.normal(self.mean, self.standard_deviation)
-        if self.low is not None and value < self.low:
-            return self.pull_value()  # Outside of range, try again
-        if self.high is not None and value > self.high:
-            return self.pull_value()  # Outside of range, try again
+        value = self.constrain(value)
         return self.q_round(value)
 
     def pull_constrained_value(self, low, high):
@@ -47,10 +44,7 @@ class GaussianDistribution(DistributionBase):
         new_mean = (self.mean + constrained_mean) / 2
         new_standard_deviation = high - low
         value = np.random.normal(new_mean, new_standard_deviation)
-        if value < low:
-            return low
-        if value > high:
-            return high
+        value = self.constrain(value, low, high)
         return self.q_round(value)
 
 
@@ -77,15 +71,37 @@ class ExponentialDistribution(DistributionBase):
         assert high is None or high > 0
         self.scale = scale
         self.q = q
+        self.low = low
+        self.high = high
 
     def pull_value(self):
         value = np.random.exponential(scale=self.scale, size=None)
+        value = self.constrain(value)
         return self.q_round(value)
 
     def pull_constrained_value(self, low, high):
         value = self.pull_value()
-        if value > high:
-            value = high
-        if value < low:
-            value = low
+        value = self.constrain(value, low, high)
+        return self.q_round(value)
+
+
+class LogNormalDistribution(DistributionBase):
+    def __init__(self, mean=0, sigma=1.0, q=None, low=None, high=None):
+        assert sigma > 0
+        assert q is None or q > 0
+        assert low is None or high is None or (low < high)
+        self.mean = mean
+        self.sigma = sigma
+        self.q = q
+        self.low = low
+        self.high = high
+
+    def pull_value(self):
+        value = np.random.lognormal(mean=self.mean, sigma=self.sigma, size=None)
+        value = self.constrain(value)
+        return self.q_round(value)
+
+    def pull_constrained_value(self, low, high):
+        value = self.pull_value()
+        value = self.constrain(value, low, high)
         return self.q_round(value)

@@ -19,3 +19,14 @@ class DistributionBase(ABC):
         if self.q is not None:
             value = round(value / self.q) * self.q
         return value
+
+    def constrain(self, value, low=None, high=None):
+        if low is None:
+            low = self.low
+        if high is None:
+            high = self.high
+        if high is not None and value > high:
+            value = high
+        if low is not None and value < low:
+            value = low
+        return value
