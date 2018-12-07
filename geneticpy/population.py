@@ -5,7 +5,7 @@ from geneticpy.parameter_set import ParameterSet
 
 class Population:
     def __init__(self, fn, params, size, percentage_to_randomly_spawn=0.05, mutate_chance=0.25, retain_percentage=0.6,
-                 maximize_fn=False, tqdm_obj=None):
+                 maximize_fn=False, tqdm_obj=None, target=None):
         assert isinstance(params, dict)
 
         self.fn = fn
@@ -16,17 +16,28 @@ class Population:
         self.mutate_chance = mutate_chance
         self.retain_percentage = retain_percentage
         self.tqdm_obj = tqdm_obj
+        self.target = target
         self.grades = None
         self.population = [self.create_random_set() for _ in range(self.size)]
+
+    def is_achieved_target(self, score):
+        return self.target is not None and ((self.maximize_fn and score > self.target)
+                                            or (not self.maximize_fn and score < self.target))
 
     def evolve(self):
         indiv_iter = 0
         graded = []
         for indiv in self.population:
             indiv_iter += 1
-            graded.append((indiv.get_score(), indiv))
+            score = indiv.get_score()
+            graded.append((score, indiv))
+            if self.is_achieved_target(score):
+                break
         self.grades = sorted(graded, key=lambda x: x[0], reverse=self.maximize_fn)
         graded = [x[1] for x in self.grades]
+        if self.is_achieved_target(score):
+            self.population = graded
+            return score
         retained_length = int(len(graded) * self.retain_percentage)
         keep = graded[:retained_length]
         m_count = 0
@@ -49,6 +60,7 @@ class Population:
                 b_count += 1
                 keep.append(keep[set1].breed(keep[set2]))
         self.population = keep
+        return None
 
     def get_final_scores(self):
         net_iter = 0

@@ -96,3 +96,33 @@ def test_constant_parameter():
     assert best_params['zzzzz'] == [1, 2, None, {}, [1, 2]]
     assert score < -49
     assert 0 < time < 5
+
+
+def test_target_loss_minimize():
+    def fn(params):
+        loss = params['x'] + params['y']
+        return loss
+
+    param_space = {'x': UniformDistribution(0, 5, q=1),
+                   'y': UniformDistribution(0, 1)}
+
+    best_params, score, time = optimize(fn=fn, param_space=param_space, size=200, generation_count=50000, verbose=False,
+                                        target=1)
+
+    assert score <= 1
+    assert time < 0.1
+
+
+def test_target_loss_minimize():
+    def fn(params):
+        loss = params['x'] + params['y']
+        return loss
+
+    param_space = {'x': UniformDistribution(0, 5, q=1),
+                   'y': UniformDistribution(0, 1)}
+
+    best_params, score, time = optimize(fn=fn, param_space=param_space, size=200, generation_count=50000,
+                                        maximize_fn=True, verbose=False, target=5)
+
+    assert score >= 5
+    assert time < 0.1
