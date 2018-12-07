@@ -1,5 +1,6 @@
 from geneticpy import optimize
 from geneticpy.distributions import *
+import pytest
 
 
 def test_optimize_simple():
@@ -150,8 +151,7 @@ def test_loss_function_none():
     def fn(params):
         return None
 
-    param_space = {'x': UniformDistribution(0, 5, q=1),
-                   'y': UniformDistribution(0, 1)}
+    param_space = {'x': UniformDistribution(0, 5)}
 
-    best_params, score, time = optimize(fn=fn, param_space=param_space, size=200, generation_count=50000,
-                                        maximize_fn=True, verbose=False, target=5)
+    with pytest.raises(Exception):
+        optimize(fn=fn, param_space=param_space, size=200, generation_count=50000)
