@@ -126,3 +126,14 @@ def test_target_loss_minimize():
 
     assert score >= 5
     assert time < 0.1
+
+
+def test_loss_function_none():
+    def fn(params):
+        return None
+
+    param_space = {'x': UniformDistribution(0, 5, q=1),
+                   'y': UniformDistribution(0, 1)}
+
+    best_params, score, time = optimize(fn=fn, param_space=param_space, size=200, generation_count=50000,
+                                        maximize_fn=True, verbose=False, target=5)
