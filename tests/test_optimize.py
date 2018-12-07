@@ -126,3 +126,21 @@ def test_target_loss_minimize():
 
     assert score >= 5
     assert time < 0.1
+
+
+def test_random_seed():
+    def fn(params):
+        loss = params['x']
+        return loss
+
+    param_space = {'x': UniformDistribution(0, 1000000)}
+    best_params1, score1, time1 = optimize(fn=fn, param_space=param_space, size=200, generation_count=500,
+                                           verbose=False, seed=123)
+    best_params2, score2, time2 = optimize(fn=fn, param_space=param_space, size=200, generation_count=500,
+                                           verbose=False, seed=123)
+    best_params3, score3, time3 = optimize(fn=fn, param_space=param_space, size=200, generation_count=500,
+                                           verbose=False, seed=124)
+    assert best_params1 == best_params2
+    assert score1 == score2
+    assert best_params1 != best_params3
+    assert best_params1 != best_params3
