@@ -44,6 +44,8 @@ class ParameterSet:
     def get_score(self):
         if self.score is None:
             self.score = self.fn(self.params)
+            if self.score is None:
+                raise Exception('Loss function returned None.')
             if self.tqdm_obj is not None:
                 self.tqdm_obj.update()
         return self.score

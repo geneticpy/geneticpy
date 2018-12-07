@@ -1,5 +1,6 @@
 from geneticpy import optimize
 from geneticpy.distributions import *
+import pytest
 
 
 def test_optimize_simple():
@@ -144,3 +145,13 @@ def test_random_seed():
     assert score1 == score2
     assert best_params1 != best_params3
     assert best_params1 != best_params3
+
+
+def test_loss_function_none():
+    def fn(params):
+        return None
+
+    param_space = {'x': UniformDistribution(0, 5)}
+
+    with pytest.raises(Exception):
+        optimize(fn=fn, param_space=param_space, size=200, generation_count=50000)
