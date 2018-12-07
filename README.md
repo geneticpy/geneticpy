@@ -1,9 +1,10 @@
 # GeneticPy
 
 [![Build Status](https://travis-ci.com/geneticpy/geneticpy.svg?branch=master)](https://travis-ci.com/geneticpy/geneticpy)
-[![PyPI version](https://badge.fury.io/py/geneticpy.svg)](https://badge.fury.io/py/geneticpy)
 [![codecov](https://codecov.io/gh/geneticpy/geneticpy/branch/master/graph/badge.svg)](https://codecov.io/gh/geneticpy/geneticpy)
+[![PyPI version](https://badge.fury.io/py/geneticpy.svg)](https://badge.fury.io/py/geneticpy)
 [![PyPI pyversions](https://img.shields.io/pypi/pyversions/geneticpy.svg)](https://pypi.python.org/pypi/geneticpy/)
+[![Downloads](https://pepy.tech/badge/geneticpy/week)](https://pepy.tech/project/geneticpy)
 
 GeneticPy is an optimizer that uses a genetic algorithm to quickly search through custom parameter spaces for optimal solutions.
 
@@ -30,7 +31,7 @@ param_space = {'type': geneticpy.ChoiceDistribution(choice_list=['add', 'multipl
                'x': geneticpy.UniformDistribution(low=5, high=10, q=1),
                'y': geneticpy.GaussianDistribution(mean=0, standard_deviation=1)}
 
-best_params, loss = geneticpy.optimize(loss_function, param_space, size=200, generation_count=500, verbose=False)
+best_params, loss, total_time = geneticpy.optimize(loss_function, param_space, size=200, generation_count=500, verbose=True)
 ```
 
 ### PyPi Project
