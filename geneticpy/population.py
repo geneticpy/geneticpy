@@ -3,6 +3,7 @@ from copy import deepcopy
 from geneticpy.distributions.distribution_base import DistributionBase
 from geneticpy.parameter_set import ParameterSet
 
+
 class Population:
     def __init__(self, fn, params, size, percentage_to_randomly_spawn=0.05, mutate_chance=0.25, retain_percentage=0.6,
                  maximize_fn=False, tqdm_obj=None, target=None):
