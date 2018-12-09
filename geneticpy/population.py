@@ -8,7 +8,7 @@ class Population:
     def __init__(self, fn, params, size, percentage_to_randomly_spawn=0.05, mutate_chance=0.25, retain_percentage=0.6,
                  maximize_fn=False, tqdm_obj=None, target=None):
         assert isinstance(params, dict)
-
+        assert int(retain_percentage * size) >= 1
         self.fn = fn
         self.params = params
         self.size = size
@@ -68,8 +68,6 @@ class Population:
         graded = []
         for indiv in self.population:
             net_iter += 1
-            if self.tqdm_obj is not None:
-                self.tqdm_obj.update()
             graded.append((indiv.get_score(), indiv))
         self.grades = sorted(graded, key=lambda x: x[0], reverse=self.maximize_fn)
         graded = [x[1] for x in self.grades]
