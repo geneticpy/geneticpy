@@ -31,7 +31,11 @@ param_space = {'type': geneticpy.ChoiceDistribution(choice_list=['add', 'multipl
                'x': geneticpy.UniformDistribution(low=5, high=10, q=1),
                'y': geneticpy.GaussianDistribution(mean=0, standard_deviation=1)}
 
-best_params, loss, total_time = geneticpy.optimize(loss_function, param_space, size=200, generation_count=500, verbose=True)
+results = geneticpy.optimize(loss_function, param_space, size=200, generation_count=500, verbose=True)
+best_params = results['top_params']
+loss = results['top_score']
+total_time = results['total_time']
+
 ```
 
 ### PyPi Project
