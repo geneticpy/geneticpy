@@ -7,6 +7,9 @@ this_directory = path.abspath(path.dirname(__file__))
 with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
+test_requirements = [
+    'pytest'
+]
 
 setup(
     name='geneticpy',
@@ -33,8 +36,15 @@ setup(
         'Topic :: Utilities'
     ],
     python_requires='~=3.4',
-    install_requires=['numpy',
-                      'tqdm'],
-    tests_require=['pytest',
-                   'pytest-runner']
+    install_requires=[
+        'numpy',
+        'tqdm'
+    ],
+    tests_require=test_requirements,
+    setup_requires=[
+        'pytest-runner'
+    ],
+    extras_require={
+        'tests': test_requirements
+    },
 )
