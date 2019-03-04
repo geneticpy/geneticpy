@@ -1,6 +1,9 @@
+import pytest
+import warnings
+
 from geneticpy import optimize
 from geneticpy.distributions import *
-import pytest
+
 
 
 def test_optimize_simple():
@@ -155,3 +158,44 @@ def test_loss_function_none():
 
     with pytest.raises(Exception):
         optimize(fn=fn, param_space=param_space, size=200, generation_count=50000)
+
+
+def test_optimize_dict_response():
+    def fn(params):
+        loss = params['x'] + params['y']
+        return loss
+
+    param_space = {'x': UniformDistribution(0, 1),
+                   'y': UniformDistribution(0, 1, q=1)}
+
+    response = optimize(fn, param_space, size=200, generation_count=500, verbose=False, tuple=False)
+    assert set(response.keys()) == {'top_params', 'top_score', 'total_time'}
+    best_params = response['top_params']
+    score = response['top_score']
+    time = response['total_time']
+    keys = list(best_params.keys())
+    keys.sort()
+    assert ['x', 'y'] == keys
+    assert best_params['x'] < 0.01
+    assert best_params['y'] == 0
+    assert score < 0.01
+    assert 0 < time < 5
+
+
+def test_optimize_deprecate_tuple_response():
+    def fn(params):
+        loss = params['x'] + params['y']
+        return loss
+
+
+    param_space = {'x': UniformDistribution(0, 1),
+                   'y': UniformDistribution(0, 1)}
+
+    with warnings.catch_warnings(record=True) as w:
+        # Cause all warnings to always be triggered.
+        warnings.simplefilter("always")
+        optimize(fn, param_space, size=200, generation_count=500, verbose=False)
+
+        assert len(w) == 1
+        assert issubclass(w[-1].category, PendingDeprecationWarning)
+        assert "deprecated" in str(w[-1].message)

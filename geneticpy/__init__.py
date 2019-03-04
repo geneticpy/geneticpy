@@ -1,12 +1,14 @@
-from geneticpy.distributions import *
-from geneticpy.population import Population
 from tqdm import tqdm
 from time import time
 from numpy import random
+import warnings
+
+from geneticpy.distributions import *
+from geneticpy.population import Population
 
 
 def optimize(fn, param_space, size=100, generation_count=10, percentage_to_randomly_spawn=0.05, mutate_chance=0.25,
-             retain_percentage=0.6, maximize_fn=False, target=None, verbose=False, seed=None):
+             retain_percentage=0.6, maximize_fn=False, target=None, verbose=False, seed=None, tuple=True):
     if seed is not None:
         random.seed(seed)
     if verbose:
@@ -14,6 +16,9 @@ def optimize(fn, param_space, size=100, generation_count=10, percentage_to_rando
         t = tqdm(desc='Optimizing parameters', total=tqdm_total)
     else:
         t = None
+    if tuple:
+        warnings.warn('Using a tuple return type. The "tuple" parameter will default to False in a future release and '
+                      'will eventually be deprecated completely.', PendingDeprecationWarning)
 
     start_time = time()
     pop = Population(fn=fn, params=param_space, size=size, percentage_to_randomly_spawn=percentage_to_randomly_spawn,
@@ -33,4 +38,11 @@ def optimize(fn, param_space, size=100, generation_count=10, percentage_to_rando
     total_time = time() - start_time
     if t is not None:
         t.close()
-    return top_params, top_score, total_time
+    if tuple:
+        return top_params, top_score, total_time
+    else:
+        return {
+            'top_params': top_params,
+            'top_score': top_score,
+            'total_time': total_time
+        }
