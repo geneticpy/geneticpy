@@ -17,8 +17,8 @@ def optimize(fn, param_space, size=100, generation_count=10, percentage_to_rando
     else:
         t = None
     if tuple:
-        warnings.warn('Using a tuple return type. The "tuple" parameter will default to False in a future release and '
-                      'will eventually be deprecated completely.', PendingDeprecationWarning)
+        warnings.warn('Using a tuple return type. The "tuple" parameter will default to False in a future release and will eventually be deprecated completely.',
+                      PendingDeprecationWarning)
 
     start_time = time()
     pop = Population(fn=fn, params=param_space, size=size, percentage_to_randomly_spawn=percentage_to_randomly_spawn,
