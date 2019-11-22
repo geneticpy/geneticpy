@@ -14,7 +14,10 @@ def test_optimize_simple():
     param_space = {'x': UniformDistribution(0, 1),
                    'y': UniformDistribution(0, 1000000, 1000)}
 
-    best_params, score, time = optimize(fn, param_space, size=200, generation_count=500, verbose=False)
+    results = optimize(fn, param_space, size=200, generation_count=500, verbose=False)
+    best_params = results['top_params']
+    score = results['top_score']
+    time = results['total_time']
     keys = list(best_params.keys())
     keys.sort()
     assert ['x', 'y'] == keys
@@ -38,7 +41,9 @@ def test_optimize_complicated():
                    'xq': UniformDistribution(0, 100, q=5),
                    'c': ChoiceDistribution([1000, 3000, 5000], [0.1, 0.7, 0.2])}
 
-    best_params, score, time = optimize(fn, param_space, size=200, generation_count=500, verbose=False)
+    results = optimize(fn, param_space, size=200, generation_count=500, verbose=False)
+    best_params = results['top_params']
+    time = results['total_time']
     keys = list(best_params.keys())
     keys.sort()
     assert ['c', 'x', 'xq', 'y'] == keys
@@ -87,7 +92,10 @@ def test_constant_parameter():
                    'zzzz': None,
                    'zzzzz': [1, 2, None, {}, [1, 2]]}
 
-    best_params, score, time = optimize(fn, param_space, size=200, generation_count=500, verbose=False)
+    results = optimize(fn, param_space, size=200, generation_count=500, verbose=False)
+    best_params = results['top_params']
+    score = results['top_score']
+    time = results['total_time']
     keys = list(best_params.keys())
     keys.sort()
     assert ['x', 'y', 'z', 'zz', 'zzz', 'zzzz', 'zzzzz'] == keys
@@ -110,7 +118,11 @@ def test_target_loss_minimize():
     param_space = {'x': UniformDistribution(0, 5, q=1),
                    'y': UniformDistribution(0, 1)}
 
-    best_params, score, time = optimize(fn=fn, param_space=param_space, size=200, generation_count=50000, verbose=False,
+    best_params, score, time = optimize(fn=fn,
+                                        param_space=param_space,
+                                        size=200,
+                                        generation_count=50000,
+                                        verbose=False,
                                         target=1)
 
     assert score <= 1
@@ -125,8 +137,15 @@ def test_target_loss_minimize():
     param_space = {'x': UniformDistribution(0, 5, q=1),
                    'y': UniformDistribution(0, 1)}
 
-    best_params, score, time = optimize(fn=fn, param_space=param_space, size=200, generation_count=50000,
-                                        maximize_fn=True, verbose=False, target=5)
+    results = optimize(fn=fn,
+                       param_space=param_space,
+                       size=200,
+                       generation_count=50000,
+                       maximize_fn=True,
+                       verbose=False,
+                       target=5)
+    score = results['top_score']
+    time = results['total_time']
 
     assert score >= 5
     assert time < 0.1
@@ -138,12 +157,17 @@ def test_random_seed():
         return loss
 
     param_space = {'x': UniformDistribution(0, 1000000)}
-    best_params1, score1, time1 = optimize(fn=fn, param_space=param_space, size=200, generation_count=500,
-                                           verbose=False, seed=123)
-    best_params2, score2, time2 = optimize(fn=fn, param_space=param_space, size=200, generation_count=500,
-                                           verbose=False, seed=123)
-    best_params3, score3, time3 = optimize(fn=fn, param_space=param_space, size=200, generation_count=500,
-                                           verbose=False, seed=124)
+    results1 = optimize(fn=fn, param_space=param_space, size=200, generation_count=500, verbose=False, seed=123)
+    best_params1 = results1['top_params']
+    score1 = results1['top_score']
+
+    results2 = optimize(fn=fn, param_space=param_space, size=200, generation_count=500, verbose=False, seed=123)
+    best_params2 = results2['top_params']
+    score2 = results2['top_score']
+
+    results3 = optimize(fn=fn, param_space=param_space, size=200, generation_count=500, verbose=False, seed=124)
+    best_params3 = results3['top_params']
+
     assert best_params1 == best_params2
     assert score1 == score2
     assert best_params1 != best_params3
@@ -194,8 +218,22 @@ def test_optimize_deprecate_tuple_response():
     with warnings.catch_warnings(record=True) as w:
         # Cause all warnings to always be triggered.
         warnings.simplefilter("always")
-        optimize(fn, param_space, size=200, generation_count=500, verbose=False)
+        optimize(fn, param_space, size=200, generation_count=500, verbose=False, tuple=True)
 
         assert len(w) == 1
-        assert issubclass(w[-1].category, PendingDeprecationWarning)
+        assert issubclass(w[-1].category, DeprecationWarning)
         assert "deprecated" in str(w[-1].message)
+
+
+def test_optimize_tqdm_count(capsys):
+    def fn(params):
+        loss = params['x'] + params['y']
+        return loss
+
+
+    param_space = {'x': UniformDistribution(0, 1),
+                   'y': UniformDistribution(0, 1)}
+
+    optimize(fn, param_space, size=50, generation_count=15, verbose=True)
+    out, err = capsys.readouterr()
+    assert '350/350' in err
