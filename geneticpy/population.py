@@ -54,6 +54,9 @@ class Population:
             keep.append(self.create_random_set())
             s_count += 1
 
+        if len(keep) > self.size:
+            keep = keep[:self.size]
+
         while len(keep) < self.size:
             set1 = random.randint(0, retained_length - 1)
             set2 = random.randint(0, retained_length - 1)
