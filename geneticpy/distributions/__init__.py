@@ -1,5 +1,6 @@
-from geneticpy.distributions.distribution_base import DistributionBase
 import numpy as np
+
+from geneticpy.distributions.distribution_base import DistributionBase
 
 
 class UniformDistribution(DistributionBase):

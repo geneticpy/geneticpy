@@ -1,5 +1,6 @@
-from geneticpy.distributions import *
 import pytest
+
+from geneticpy.distributions import *
 
 
 class TestUniformDistribution:

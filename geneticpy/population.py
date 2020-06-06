@@ -1,5 +1,6 @@
-import random
 from copy import deepcopy
+import random
+
 from geneticpy.distributions.distribution_base import DistributionBase
 from geneticpy.parameter_set import ParameterSet
 

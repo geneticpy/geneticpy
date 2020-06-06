@@ -39,7 +39,8 @@ setup(
     python_requires='~=3.4',
     install_requires=[
         'numpy',
-        'tqdm'
+        'tqdm',
+        'scikit-learn>=0.23.1'
     ],
     tests_require=test_requirements,
     setup_requires=[
