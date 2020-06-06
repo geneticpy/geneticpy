@@ -190,7 +190,11 @@ class GeneticSearchCV:
         def _score(params):
             estimator = clone(self.estimator)
             for k, v in params.items():
-                estimator.__setattr__(k, v)
+                if '__' in k:
+                    step, attribute = k.split('__')
+                    estimator.named_steps[step].__setattr__(attribute, v)
+                else:
+                    estimator.__setattr__(k, v)
             scores = cross_validate(estimator, X, y, scoring=self.scoring, cv=cv)
             return scores['test_score'].mean()
 
