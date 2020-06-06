@@ -1,10 +1,10 @@
-import random
 from copy import deepcopy
+import random
+
 from geneticpy.distributions import DistributionBase
 
 
 class ParameterSet:
-
     def __init__(self, params, param_space, fn, maximize_fn, tqdm_obj):
         self.params = params
         self.param_space = param_space

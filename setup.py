@@ -13,10 +13,10 @@ test_requirements = [
 
 setup(
     name='geneticpy',
-    version='1.1.0',
+    version='1.2.0',
     packages=find_packages(),
     url='https://github.com/geneticpy/geneticpy',
-    download_url='https://github.com/geneticpy/geneticpy/archive/v1.1.0.tar.gz',
+    download_url='https://github.com/geneticpy/geneticpy/archive/v1.2.0.tar.gz',
     license='MIT',
     author='Brandon Schabell',
     author_email='brandonschabell@gmail.com',
@@ -28,18 +28,23 @@ setup(
         'Intended Audience :: Developers',
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
+        'Operating System :: Microsoft :: Windows',
+        'Operating System :: POSIX',
+        'Operating System :: Unix',
+        'Operating System :: MacOS',
+        'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
-        'Topic :: Scientific/Engineering :: Artificial Intelligence',
+        'Topic :: Scientific/Engineering',
+        'Topic :: Software Development',
         'Topic :: Utilities'
     ],
-    python_requires='~=3.4',
+    python_requires='~=3.6',
     install_requires=[
-        'numpy',
-        'tqdm'
+        'numpy>=1.14.0',
+        'tqdm',
+        'scikit-learn>=0.23.1'
     ],
     tests_require=test_requirements,
     setup_requires=[

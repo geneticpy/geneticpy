@@ -10,17 +10,19 @@ GeneticPy is an optimizer that uses a genetic algorithm to quickly search throug
 
 ### Installation
 
-GeneticPy requires Python 3.4+
+GeneticPy requires Python 3.6+
 
 ```sh
 pip install geneticpy
 ```
 
-### Example Usage:
+### Optimize Example:
 
 A brief example to get you started is included below:
 
 ```python
+import geneticpy
+
 def loss_function(params):
   if params['type'] == 'add':
     return params['x'] + params['y']
@@ -35,7 +37,42 @@ results = geneticpy.optimize(loss_function, param_space, size=200, generation_co
 best_params = results['top_params']
 loss = results['top_score']
 total_time = results['total_time']
+```
 
+### GeneticSearchCV Example:
+
+You can use the `GeneticSearchCV` class as a drop-in replacement for Scikit-Learn's `GridSearchCV`. This 
+allows for faster and more complete optimization of your hyperparameters when using Scikit-Learn estimators
+and/or pipelines.
+
+```python
+from sklearn import datasets
+from sklearn.decomposition import PCA
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import Pipeline
+
+from geneticpy import GeneticSearchCV, ChoiceDistribution, LogNormalDistribution, UniformDistribution
+
+
+# Define a pipeline to search for the best combination of PCA truncation
+# and classifier regularization.
+pca = PCA()
+# set the tolerance to a large value to make the example faster
+logistic = LogisticRegression(max_iter=10000, tol=0.1, solver='saga')
+pipe = Pipeline(steps=[('pca', pca), ('logistic', logistic)])
+
+X_digits, y_digits = datasets.load_digits(return_X_y=True)
+
+# Parameters of pipelines can be set using ‘__’ separated parameter names:
+param_grid = {
+    'pca__n_components': UniformDistribution(low=5, high=64, q=1),
+    'logistic__C': LogNormalDistribution(mean=1, sigma=0.5, low=0.001, high=2),
+    'logistic__penalty': ChoiceDistribution(choice_list=['l1', 'l2'])
+}
+search = GeneticSearchCV(pipe, param_grid)
+search.fit(X_digits, y_digits)
+print("Best parameter (CV score=%0.3f):" % search.best_score_)
+print(search.best_params_)
 ```
 
 ### PyPi Project
