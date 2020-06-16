@@ -8,15 +8,16 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 test_requirements = [
-    'pytest'
+    'pytest',
+    'pandas'
 ]
 
 setup(
     name='geneticpy',
-    version='1.2.1',
+    version='1.2.2',
     packages=find_packages(),
     url='https://github.com/geneticpy/geneticpy',
-    download_url='https://github.com/geneticpy/geneticpy/archive/v1.2.1.tar.gz',
+    download_url='https://github.com/geneticpy/geneticpy/archive/v1.2.2.tar.gz',
     license='MIT',
     author='Brandon Schabell',
     author_email='brandonschabell@gmail.com',
