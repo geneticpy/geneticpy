@@ -203,8 +203,7 @@ class GeneticSearchCV:
         self.best_params_ = results['top_params']
         self.best_score_ = results['top_score']
         self.best_estimator_ = clone(self.estimator)
-        for k, v in self.best_params_.items():
-            self.best_estimator_.__setattr__(k, v)
+        self.best_estimator_.set_params(**self.best_params_)
         if self.refit:
             self.best_estimator_.fit(X, y)
 

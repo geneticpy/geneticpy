@@ -1,9 +1,12 @@
+import pandas as pd
+from sklearn.compose import ColumnTransformer
 from sklearn.datasets import load_iris, load_digits
 from sklearn.decomposition import PCA
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.feature_selection import SelectKBest, chi2
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
 
 from geneticpy import GeneticSearchCV
 from geneticpy.distributions import *
@@ -113,3 +116,51 @@ def test_complex_pipeline():
     assert 0.5 < probabilities[0] < 1
     for i in range(1, 9):
         assert 0 < probabilities[i] < 0.5
+
+
+def test_column_transformer():
+    logistic = LogisticRegression(max_iter=10000, tol=0.1)
+
+    df = pd.DataFrame({'num_a': [2, 3, 5, 7, 11, 13],
+                       'num_b': [1, 1, 2, 3, 5, 8],
+                       'cat_a': ['cat', 'dog', 'cat', 'cat', 'dog', 'cat'],
+                       'cat_b': ['blue', 'red', 'yellow', 'blue', 'blue', 'red']})
+
+    for _ in range(3):
+        df = df.append(df)
+
+    numeric_features = ['num_a', 'num_b']
+    categoric_features = ['cat_a', 'cat_b']
+
+    numeric_transformer = Pipeline(steps=[
+        ('scaler', StandardScaler())
+    ])
+    categoric_transformer = Pipeline(steps=[
+        ('onehot', OneHotEncoder()),
+        ('feature_selector', SelectKBest(chi2))
+    ])
+    preprocessor = ColumnTransformer(transformers=[
+        ('numeric', numeric_transformer, numeric_features),
+        ('categoric', categoric_transformer, categoric_features)
+    ])
+
+    pipe = Pipeline(steps=[
+        ('preprocessor', preprocessor),
+        ('logistic', logistic)
+    ])
+
+    param_grid = {
+        'preprocessor__categoric__feature_selector__k': UniformDistribution(low=1, high=3, q=1),
+        'logistic__C': LogNormalDistribution(mean=1, sigma=0.5, low=0.001, high=2),
+        'logistic__penalty': ChoiceDistribution(['l2'])
+    }
+    search = GeneticSearchCV(pipe, param_grid, random_state=0, generation_count=2, population_size=10)
+    search.fit(df, df['cat_a'])
+    assert set(search.best_params_.keys()) == {'preprocessor__categoric__feature_selector__k',
+                                               'logistic__C',
+                                               'logistic__penalty'}
+    assert search.best_params_['logistic__penalty'] == 'l2'
+    assert search._estimator_type == 'classifier'
+    assert list(search.classes_) == ['cat', 'dog']
+    assert search.n_features_in_ == 4
+
