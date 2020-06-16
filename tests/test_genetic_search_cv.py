@@ -86,3 +86,30 @@ def test_pipeline():
     for i in range(1, 9):
         assert 0 < probabilities[i] < 0.5
 
+
+def test_complex_pipeline():
+    pca = PCA()
+    logistic = LogisticRegression(max_iter=10000, tol=0.1)
+    preprocessing = Pipeline(steps=[('pca', pca)])
+    pipe = Pipeline(steps=[('preprocessing', preprocessing), ('logistic', logistic)])
+
+    X_digits, y_digits = load_digits(return_X_y=True)
+
+    param_grid = {
+        'preprocessing__pca__n_components': UniformDistribution(low=5, high=64, q=1),
+        'logistic__C': LogNormalDistribution(mean=1, sigma=0.5, low=0.001, high=2),
+        'logistic__penalty': ChoiceDistribution(['l2'])
+    }
+    search = GeneticSearchCV(pipe, param_grid, random_state=0, generation_count=2, population_size=10)
+    search.fit(X_digits, y_digits)
+    assert set(search.best_params_.keys()) == {'preprocessing__pca__n_components', 'logistic__C', 'logistic__penalty'}
+    assert search.best_params_['logistic__penalty'] == 'l2'
+    assert search._estimator_type == 'classifier'
+    assert list(search.classes_) == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    assert search.n_features_in_ == 64
+    prediction = search.predict(X_digits[0, :].reshape(1, -1))[0]
+    assert prediction == 0
+    probabilities = search.predict_proba(X_digits[0, :].reshape(1, -1))[0]
+    assert 0.5 < probabilities[0] < 1
+    for i in range(1, 9):
+        assert 0 < probabilities[i] < 0.5
