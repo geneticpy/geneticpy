@@ -13,10 +13,10 @@ test_requirements = [
 
 setup(
     name='geneticpy',
-    version='1.2.0',
+    version='1.2.1',
     packages=find_packages(),
     url='https://github.com/geneticpy/geneticpy',
-    download_url='https://github.com/geneticpy/geneticpy/archive/v1.2.0.tar.gz',
+    download_url='https://github.com/geneticpy/geneticpy/archive/v1.2.1.tar.gz',
     license='MIT',
     author='Brandon Schabell',
     author_email='brandonschabell@gmail.com',
