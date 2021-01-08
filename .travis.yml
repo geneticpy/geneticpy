@@ -5,14 +5,18 @@ python:
   - "3.6"
   - "3.7"
   - "3.8"
-  - "3.7-dev"
-  - "3.8-dev"
+  - "3.9"
+
+env:
+  - SKLEARN_VERSION=0.23.2
+  - SKLEARN_VERSION=0.24.0
 
 before_install:
   - pip install codecov
   - pip install pytest-cov
 
 install:
+  - pip install scikit-learn==$SKLEARN_VERSION
   - pip install -e .[tests]
 
 script:

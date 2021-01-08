@@ -9,7 +9,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 
 test_requirements = [
     'pytest',
-    'pandas'
+    'pandas==1.0.5'
 ]
 
 setup(
@@ -37,6 +37,7 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
         'Topic :: Scientific/Engineering',
         'Topic :: Software Development',
         'Topic :: Utilities'
