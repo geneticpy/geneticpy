@@ -1,7 +1,6 @@
 from time import time
 import warnings
 
-import numpy as np
 from tqdm import tqdm
 
 from geneticpy.distributions import *

@@ -5,9 +5,9 @@ from sklearn.model_selection._split import check_cv
 from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import indexable, check_is_fitted, _deprecate_positional_args
 from sklearn.utils.metaestimators import if_delegate_has_method
-from sklearn.metrics._scorer import _check_multimetric_scoring
 
 from geneticpy.optimize_function import optimize
+
 
 class GeneticSearchCV:
     def __init__(self,
@@ -207,7 +207,6 @@ class GeneticSearchCV:
         if self.refit:
             self.best_estimator_.fit(X, y)
 
-
     @_deprecate_positional_args
     def fit(self, X, y=None, *, groups=None, **fit_params):
         """Run fit with all sets of parameters.
@@ -229,8 +228,6 @@ class GeneticSearchCV:
         """
         estimator = self.estimator
         cv = check_cv(self.cv, y, classifier=is_classifier(estimator))
-
-        scorers, self.multimetric_ = _check_multimetric_scoring(self.estimator, scoring=self.scoring)
 
         X, y, groups = indexable(X, y, groups)
 

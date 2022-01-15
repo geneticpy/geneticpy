@@ -1,0 +1,19 @@
+name: Release
+on:
+  release:
+    types:
+      - published
+
+env:
+  PYPI_USERNAME: ${{ secrets.PYPI_USERNAME }}
+  PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+jobs:
+  Release:
+    runs-on: ubuntu-latest
+    container: "python:3.10"
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+      - run: pip install twine wheel
+      - run: python setup.py sdist bdist_wheel
+      - run: TWINE_USERNAME=${PYPI_USERNAME} TWINE_PASSWORD=${PYPI_PASSWORD} twine upload dist/*
