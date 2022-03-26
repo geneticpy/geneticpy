@@ -4,9 +4,6 @@ on:
     types:
       - published
 
-env:
-  PYPI_USERNAME: ${{ secrets.PYPI_USERNAME }}
-  PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
 jobs:
   Release:
     runs-on: ubuntu-latest
@@ -14,6 +11,11 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
-      - run: pip install twine wheel
-      - run: python setup.py sdist bdist_wheel
-      - run: TWINE_USERNAME=${PYPI_USERNAME} TWINE_PASSWORD=${PYPI_PASSWORD} twine upload dist/*
+      - run: pip install twine wheel build
+      - run: python -m build
+      - name: Publish package to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_TOKEN }}
+          skip_existing: true
