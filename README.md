@@ -10,7 +10,7 @@ GeneticPy is an optimizer that uses a genetic algorithm to quickly search throug
 
 ### Installation
 
-GeneticPy requires Python 3.6+
+GeneticPy requires Python 3.7+
 
 ```sh
 pip install geneticpy

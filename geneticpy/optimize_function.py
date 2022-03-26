@@ -1,5 +1,4 @@
 from time import time
-import warnings
 
 from tqdm import tqdm
 
@@ -11,14 +10,13 @@ def optimize(fn,
              param_space,
              size=100,
              generation_count=10,
-             percentage_to_randomly_spawn=0.05,
-             mutate_chance=0.25,
-             retain_percentage=0.6,
+             percentage_to_randomly_spawn=0.1,
+             mutate_chance=0.35,
+             retain_percentage=0.5,
              maximize_fn=False,
              target=None,
              verbose=False,
-             seed=None,
-             tuple=False):
+             seed=None):
     if seed is not None:
         np.random.seed(seed)
     if verbose:
@@ -26,9 +24,6 @@ def optimize(fn,
         t = tqdm(desc='Optimizing parameters', total=tqdm_total)
     else:
         t = None
-    if tuple:
-        warnings.warn('Using a tuple return type. The "tuple" parameter will be deprecated in a future release.',
-                      DeprecationWarning)
 
     start_time = time()
     pop = Population(fn=fn, params=param_space, size=size, percentage_to_randomly_spawn=percentage_to_randomly_spawn,
@@ -48,11 +43,8 @@ def optimize(fn,
     total_time = time() - start_time
     if t is not None:
         t.close()
-    if tuple:
-        return top_params, top_score, total_time
-    else:
-        return {
-            'top_params': top_params,
-            'top_score': top_score,
-            'total_time': total_time
-        }
+    return {
+        'top_params': top_params,
+        'top_score': top_score,
+        'total_time': total_time
+    }
