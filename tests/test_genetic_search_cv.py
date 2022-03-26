@@ -1,4 +1,6 @@
 import pandas as pd
+import pytest
+from sklearn import __version__ as sklearn_version
 from sklearn.compose import ColumnTransformer
 from sklearn.datasets import load_iris, load_digits
 from sklearn.decomposition import PCA
@@ -7,6 +9,7 @@ from sklearn.feature_selection import SelectKBest, chi2
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.metrics import accuracy_score, roc_auc_score
 
 from geneticpy import GeneticSearchCV
 from geneticpy.distributions import *
@@ -163,4 +166,39 @@ def test_column_transformer():
     assert search._estimator_type == 'classifier'
     assert list(search.classes_) == ['cat', 'dog']
     assert search.n_features_in_ == 4
+
+
+@pytest.mark.skipif(int(sklearn_version.split('.')[0]) == 0, reason='scikit-learn version is <1.0.0')
+@pytest.mark.parametrize('scorer', ['accuracy',
+                                    'balanced_accuracy',
+                                    'top_k_accuracy',
+                                    'average_precision',
+                                    'neg_brier_score',
+                                    'f1',
+                                    'f1_micro',
+                                    'roc_auc',
+                                    'recall',
+                                    'precision',
+                                    accuracy_score,
+                                    roc_auc_score])
+def test_random_forest_scorers(scorer):
+    iris = load_iris()
+    estimator = RandomForestClassifier()
+    distributions = {
+        'n_estimators': UniformDistribution(low=10, high=250, q=1),
+        'min_samples_leaf': UniformDistribution(low=1, high=50, q=1)
+    }
+    clf = GeneticSearchCV(estimator,
+                          distributions,
+                          random_state=0,
+                          generation_count=2,
+                          population_size=10,
+                          scoring=scorer)
+    search = clf.fit(iris.data, iris.target)
+    assert set(search.best_params_.keys()) == {'min_samples_leaf', 'n_estimators'}
+    assert 1 <= search.best_params_['min_samples_leaf'] <= 50
+    assert 10 <= search.best_params_['n_estimators'] <= 250
+    best = search.best_estimator_
+    assert search.best_params_['n_estimators'] == best.n_estimators
+    assert search.best_params_['min_samples_leaf'] == best.min_samples_leaf
 

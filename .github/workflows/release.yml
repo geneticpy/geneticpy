@@ -1,0 +1,21 @@
+name: Release
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  Release:
+    runs-on: ubuntu-latest
+    container: "python:3.10"
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+      - run: pip install twine wheel build
+      - run: python -m build
+      - name: Publish package to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_TOKEN }}
+          skip_existing: true

@@ -29,6 +29,7 @@ class Population:
     def evolve(self):
         indiv_iter = 0
         graded = []
+        score = None
         for indiv in self.population:
             indiv_iter += 1
             score = indiv.get_score()
