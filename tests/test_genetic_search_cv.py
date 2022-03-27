@@ -201,4 +201,3 @@ def test_random_forest_scorers(scorer):
     best = search.best_estimator_
     assert search.best_params_['n_estimators'] == best.n_estimators
     assert search.best_params_['min_samples_leaf'] == best.min_samples_leaf
-

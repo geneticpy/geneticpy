@@ -1,9 +1,9 @@
+from asyncio import sleep
+
 import pytest
-import warnings
 
 from geneticpy import optimize
 from geneticpy.distributions import *
-
 
 
 def test_optimize_simple():
@@ -14,7 +14,7 @@ def test_optimize_simple():
     param_space = {'x': UniformDistribution(0, 1),
                    'y': UniformDistribution(0, 1000000, 1000)}
 
-    results = optimize(fn, param_space, size=200, generation_count=500, verbose=False)
+    results = optimize(fn, param_space, size=200, generation_count=500, verbose=False, seed=0)
     best_params = results['top_params']
     score = results['top_score']
     time = results['total_time']
@@ -24,7 +24,7 @@ def test_optimize_simple():
     assert best_params['x'] < 0.01
     assert best_params['y'] == 0
     assert score < 0.01
-    assert 0 < time < 5
+    assert 0 < time < 10
 
 
 def test_optimize_complicated():
@@ -41,7 +41,7 @@ def test_optimize_complicated():
                    'xq': UniformDistribution(0, 100, q=5),
                    'c': ChoiceDistribution([1000, 3000, 5000], [0.1, 0.7, 0.2])}
 
-    results = optimize(fn, param_space, size=200, generation_count=500, verbose=False)
+    results = optimize(fn, param_space, size=200, generation_count=500, verbose=False, seed=0)
     best_params = results['top_params']
     time = results['total_time']
     keys = list(best_params.keys())
@@ -50,7 +50,7 @@ def test_optimize_complicated():
     assert best_params['x'] < 0.01
     assert 18 < best_params['y'] < 20
     assert 1000 == best_params['c']
-    assert 0 < time < 5
+    assert 0 < time < 10
 
 
 def test_verbose_mode(capsys):
@@ -61,7 +61,7 @@ def test_verbose_mode(capsys):
     param_space = {'x': UniformDistribution(0, 1),
                    'y': UniformDistribution(0, 1000000, 1000)}
 
-    optimize(fn, param_space, size=200, generation_count=500, verbose=True)
+    optimize(fn, param_space, size=200, generation_count=500, verbose=True, seed=0)
     out, err = capsys.readouterr()
     assert 'Optimizing parameters: ' in err
 
@@ -74,7 +74,7 @@ def test_verbose_mode_false(capsys):
     param_space = {'x': UniformDistribution(0, 1),
                    'y': UniformDistribution(0, 1000000, 1000)}
 
-    optimize(fn, param_space, size=200, generation_count=500, verbose=False)
+    optimize(fn, param_space, size=200, generation_count=500, verbose=False, seed=0)
     out, err = capsys.readouterr()
     assert 'Optimizing parameters: ' not in err
 
@@ -92,7 +92,7 @@ def test_constant_parameter():
                    'zzzz': None,
                    'zzzzz': [1, 2, None, {}, [1, 2]]}
 
-    results = optimize(fn, param_space, size=200, generation_count=500, verbose=False)
+    results = optimize(fn, param_space, size=200, generation_count=500, verbose=False, seed=0)
     best_params = results['top_params']
     score = results['top_score']
     time = results['total_time']
@@ -107,26 +107,7 @@ def test_constant_parameter():
     assert best_params['zzzz'] is None
     assert best_params['zzzzz'] == [1, 2, None, {}, [1, 2]]
     assert score < -49
-    assert 0 < time < 5
-
-
-def test_target_loss_minimize():
-    def fn(params):
-        loss = params['x'] + params['y']
-        return loss
-
-    param_space = {'x': UniformDistribution(0, 5, q=1),
-                   'y': UniformDistribution(0, 1)}
-
-    best_params, score, time = optimize(fn=fn,
-                                        param_space=param_space,
-                                        size=200,
-                                        generation_count=50000,
-                                        verbose=False,
-                                        target=1)
-
-    assert score <= 1
-    assert time < 0.1
+    assert 0 < time < 10
 
 
 def test_target_loss_minimize():
@@ -141,9 +122,32 @@ def test_target_loss_minimize():
                        param_space=param_space,
                        size=200,
                        generation_count=50000,
+                       verbose=False,
+                       target=1,
+                       seed=0)
+    score = results['top_score']
+    time = results['total_time']
+
+    assert score <= 1
+    assert time < 0.1
+
+
+def test_target_loss_maximize():
+    def fn(params):
+        loss = params['x'] + params['y']
+        return loss
+
+    param_space = {'x': UniformDistribution(0, 5, q=1),
+                   'y': UniformDistribution(0, 1)}
+
+    results = optimize(fn=fn,
+                       param_space=param_space,
+                       size=200,
+                       generation_count=50000,
                        maximize_fn=True,
                        verbose=False,
-                       target=5)
+                       target=5,
+                       seed=0)
     score = results['top_score']
     time = results['total_time']
 
@@ -184,47 +188,6 @@ def test_loss_function_none():
         optimize(fn=fn, param_space=param_space, size=200, generation_count=50000)
 
 
-def test_optimize_dict_response():
-    def fn(params):
-        loss = params['x'] + params['y']
-        return loss
-
-    param_space = {'x': UniformDistribution(0, 1),
-                   'y': UniformDistribution(0, 1, q=1)}
-
-    response = optimize(fn, param_space, size=200, generation_count=500, verbose=False, tuple=False)
-    assert set(response.keys()) == {'top_params', 'top_score', 'total_time'}
-    best_params = response['top_params']
-    score = response['top_score']
-    time = response['total_time']
-    keys = list(best_params.keys())
-    keys.sort()
-    assert ['x', 'y'] == keys
-    assert best_params['x'] < 0.01
-    assert best_params['y'] == 0
-    assert score < 0.01
-    assert 0 < time < 5
-
-
-def test_optimize_deprecate_tuple_response():
-    def fn(params):
-        loss = params['x'] + params['y']
-        return loss
-
-
-    param_space = {'x': UniformDistribution(0, 1),
-                   'y': UniformDistribution(0, 1)}
-
-    with warnings.catch_warnings(record=True) as w:
-        # Cause all warnings to always be triggered.
-        warnings.simplefilter("always")
-        optimize(fn, param_space, size=200, generation_count=500, verbose=False, tuple=True)
-
-        assert len(w) == 1
-        assert issubclass(w[-1].category, DeprecationWarning)
-        assert "deprecated" in str(w[-1].message)
-
-
 def test_optimize_tqdm_count(capsys):
     def fn(params):
         loss = params['x'] + params['y']
@@ -236,4 +199,26 @@ def test_optimize_tqdm_count(capsys):
 
     optimize(fn, param_space, size=50, generation_count=15, verbose=True)
     out, err = capsys.readouterr()
-    assert '350/350' in err
+    assert '425/425' in err
+
+
+def test_async_score():
+    async def fn_async(params):
+        loss = params['x'] + params['y']
+        await sleep(1)
+        return loss
+
+    param_space = {'x': UniformDistribution(0, 1),
+                   'y': UniformDistribution(0, 1, q=1)}
+
+    response = optimize(fn_async, param_space, size=50, generation_count=3, verbose=True, seed=0)
+    best_params = response['top_params']
+    score = response['top_score']
+    time = response['total_time']
+    keys = list(best_params.keys())
+    keys.sort()
+    assert ['x', 'y'] == keys
+    assert best_params['x'] < 0.1
+    assert best_params['y'] == 0
+    assert score < 0.1
+    assert 3 < time < 10

@@ -1,3 +1,4 @@
+import asyncio
 from copy import deepcopy
 import random
 
@@ -10,7 +11,12 @@ class Population:
                  maximize_fn=False, tqdm_obj=None, target=None):
         assert isinstance(params, dict)
         assert int(retain_percentage * size) >= 1
-        self.fn = fn
+        if asyncio.iscoroutinefunction(fn):
+            self.fn = fn
+        else:
+            async def _fn_async(*args, **kwargs):
+                return fn(*args, **kwargs)
+            self.fn = _fn_async
         self.params = params
         self.size = size
         self.maximize_fn = maximize_fn
@@ -26,21 +32,23 @@ class Population:
         return self.target is not None and ((self.maximize_fn and score > self.target)
                                             or (not self.maximize_fn and score < self.target))
 
+    @staticmethod
+    async def _evaluate(individual):
+        score = await individual.get_score()
+        return score, individual
+
+    async def _grade(self):
+        return await asyncio.gather(*[self._evaluate(individual) for individual in self.population])
+
     def evolve(self):
-        indiv_iter = 0
-        graded = []
-        score = None
-        for indiv in self.population:
-            indiv_iter += 1
-            score = indiv.get_score()
-            graded.append((score, indiv))
-            if self.is_achieved_target(score):
-                break
+        graded = asyncio.run(self._grade())
         self.grades = sorted(graded, key=lambda x: x[0], reverse=self.maximize_fn)
+        top_score = self.grades[0][0]
         graded = [x[1] for x in self.grades]
-        if self.is_achieved_target(score):
+
+        if self.is_achieved_target(top_score):
             self.population = graded
-            return score
+            return top_score
         retained_length = int(len(graded) * self.retain_percentage)
         keep = graded[:retained_length]
         m_count = 0
@@ -69,17 +77,13 @@ class Population:
         return None
 
     def get_final_scores(self):
-        net_iter = 0
-        graded = []
-        for indiv in self.population:
-            net_iter += 1
-            graded.append((indiv.get_score(), indiv))
+        graded = asyncio.run(self._grade())
         self.grades = sorted(graded, key=lambda x: x[0], reverse=self.maximize_fn)
         graded = [x[1] for x in self.grades]
         self.population = graded
 
     def get_top_score(self):
-        return self.population[0].get_score()
+        return asyncio.run(self.population[0].get_score())
 
     def get_top_params(self):
         return self.population[0].get_params()
