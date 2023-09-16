@@ -7,10 +7,10 @@ on:
 jobs:
   Release:
     runs-on: ubuntu-latest
-    container: "python:3.10"
+    container: "python:3.11"
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - run: pip install twine wheel build
       - run: python -m build
       - name: Publish package to PyPI
