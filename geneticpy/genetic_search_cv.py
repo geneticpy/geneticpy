@@ -6,10 +6,44 @@ from sklearn.model_selection import cross_validate
 from sklearn.model_selection._split import check_cv
 from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import indexable, check_is_fitted, _deprecate_positional_args
-from sklearn.utils.metaestimators import if_delegate_has_method
+from sklearn.utils.metaestimators import available_if
 
 from geneticpy.distributions import DistributionBase
 from geneticpy.optimize_function import optimize
+
+
+def _check_refit(search_cv, attr):
+    if not search_cv.refit:
+        raise AttributeError(
+            f"This {type(search_cv).__name__} instance was initialized with "
+            f"`refit=False`. {attr} is available only after refitting on the best "
+            "parameters. You can refit an estimator manually using the "
+            "`best_params_` attribute"
+        )
+
+
+def _estimator_has(attr):
+    """Check if we can delegate a method to the underlying estimator.
+
+    Calling a prediction method will only be available if `refit=True`. In
+    such case, we check first the fitted best estimator. If it is not
+    fitted, we check the unfitted estimator.
+
+    Checking the unfitted estimator allows to use `hasattr` on the `SearchCV`
+    instance even before calling `fit`.
+    """
+
+    def check(self):
+        _check_refit(self, attr)
+        if hasattr(self, "best_estimator_"):
+            # raise an AttributeError if `attr` does not exist
+            getattr(self.best_estimator_, attr)
+            return True
+        # raise an AttributeError if `attr` does not exist
+        getattr(self.estimator, attr)
+        return True
+
+    return check
 
 
 class GeneticSearchCV:
@@ -155,7 +189,7 @@ class GeneticSearchCV:
         else:
             check_is_fitted(self)
 
-    @if_delegate_has_method(delegate=('best_estimator_', 'estimator'))
+    @available_if(_estimator_has("predict"))
     def predict(self, X):
         """Call predict on the estimator with the best found parameters.
         Only available if ``refit=True`` and the underlying estimator supports
@@ -170,7 +204,7 @@ class GeneticSearchCV:
         self._check_is_fitted('predict')
         return self.best_estimator_.predict(X)
 
-    @if_delegate_has_method(delegate=('best_estimator_', 'estimator'))
+    @available_if(_estimator_has("predict_proba"))
     def predict_proba(self, X):
         """Call predict_proba on the estimator with the best found parameters.
         Only available if ``refit=True`` and the underlying estimator supports
@@ -185,7 +219,7 @@ class GeneticSearchCV:
         self._check_is_fitted('predict_proba')
         return self.best_estimator_.predict_proba(X)
 
-    @if_delegate_has_method(delegate=('best_estimator_', 'estimator'))
+    @available_if(_estimator_has("predict_log_proba"))
     def predict_log_proba(self, X):
         """Call predict_log_proba on the estimator with the best found parameters.
         Only available if ``refit=True`` and the underlying estimator supports
@@ -200,7 +234,7 @@ class GeneticSearchCV:
         self._check_is_fitted('predict_log_proba')
         return self.best_estimator_.predict_log_proba(X)
 
-    @if_delegate_has_method(delegate=('best_estimator_', 'estimator'))
+    @available_if(_estimator_has("decision_function"))
     def decision_function(self, X):
         """Call decision_function on the estimator with the best found parameters.
         Only available if ``refit=True`` and the underlying estimator supports
@@ -215,7 +249,7 @@ class GeneticSearchCV:
         self._check_is_fitted('decision_function')
         return self.best_estimator_.decision_function(X)
 
-    @if_delegate_has_method(delegate=('best_estimator_', 'estimator'))
+    @available_if(_estimator_has("transform"))
     def transform(self, X):
         """Call transform on the estimator with the best found parameters.
         Only available if the underlying estimator supports ``transform`` and
@@ -230,7 +264,7 @@ class GeneticSearchCV:
         self._check_is_fitted('transform')
         return self.best_estimator_.transform(X)
 
-    @if_delegate_has_method(delegate=('best_estimator_', 'estimator'))
+    @available_if(_estimator_has("inverse_transform"))
     def inverse_transform(self, Xt):
         """Call inverse_transform on the estimator with the best found params.
         Only available if the underlying estimator implements

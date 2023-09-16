@@ -1,6 +1,5 @@
 import pandas as pd
 import pytest
-from sklearn import __version__ as sklearn_version
 from sklearn.compose import ColumnTransformer
 from sklearn.datasets import load_iris, load_digits
 from sklearn.decomposition import PCA
@@ -128,9 +127,8 @@ def test_column_transformer():
                        'num_b': [1, 1, 2, 3, 5, 8],
                        'cat_a': ['cat', 'dog', 'cat', 'cat', 'dog', 'cat'],
                        'cat_b': ['blue', 'red', 'yellow', 'blue', 'blue', 'red']})
-
-    for _ in range(3):
-        df = df.append(df)
+    
+    df = pd.concat([df, df, df])
 
     numeric_features = ['num_a', 'num_b']
     categoric_features = ['cat_a', 'cat_b']
@@ -168,7 +166,6 @@ def test_column_transformer():
     assert search.n_features_in_ == 4
 
 
-@pytest.mark.skipif(int(sklearn_version.split('.')[0]) == 0, reason='scikit-learn version is <1.0.0')
 @pytest.mark.parametrize('scorer', ['accuracy',
                                     'balanced_accuracy',
                                     'top_k_accuracy',
