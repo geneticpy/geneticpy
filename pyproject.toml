@@ -1,6 +1,51 @@
 [build-system]
-requires = ['setuptools>=42', 'setuptools-git-versioning']
-build-backend = 'setuptools.build_meta'
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
 
-[tool.setuptools-git-versioning]
-enabled = true
+[project]
+name = "geneticpy"
+version = "1.4.0"
+description = "GeneticPy is an optimizer that uses a genetic algorithm to quickly search through custom parameter spaces for optimal solutions."
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [
+    {name = "Brandon Schabell", email = "brandonschabell@gmail.com"}
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX",
+    "Operating System :: Unix",
+    "Operating System :: MacOS",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Software Development",
+    "Topic :: Utilities",
+]
+dependencies = [
+    "numpy>=1.14.0",
+    "tqdm",
+]
+
+[project.optional-dependencies]
+tests = ["pytest", "pandas", "pytest-runner"]
+docs = ["sphinx", "sphinx_rtd_theme", "numpydoc"]
+
+[project.urls]
+Homepage = "https://github.com/geneticpy/geneticpy"
+Documentation = "https://geneticpy.readthedocs.io"
+"Bug Tracker" = "https://github.com/geneticpy/geneticpy/issues"
+"Source Code" = "https://github.com/geneticpy/geneticpy"
+
+[tool.setuptools.packages.find]
+exclude = ["docs*", "tests*"]

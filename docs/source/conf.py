@@ -18,7 +18,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'GeneticPy'
-copyright = '2022, Brandon Schabell'
+copyright = '2025, Brandon Schabell'
 author = 'Brandon Schabell'
 
 
