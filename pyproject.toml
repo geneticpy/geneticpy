@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "geneticpy"
-version = "1.4.0"
+version = "2.0.0"
 description = "GeneticPy is an optimizer that uses a genetic algorithm to quickly search through custom parameter spaces for optimal solutions."
 readme = "README.md"
 requires-python = ">=3.10"

@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.0.0] - 2025-10-11
 
 ### Changed
 - **BREAKING**: Removed scikit-learn dependency and `GeneticSearchCV` class
@@ -35,11 +35,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - ReadTheDocs configuration for proper documentation building
 - Docstring formatting for Sphinx compatibility
-- **Critical**: Infinite loop bug in breeding logic where `if set1 != set2` condition could hang indefinitely
-- **Critical**: Incomplete random seeding - now seeds both `random` and `numpy.random` for full reproducibility
-- **Important**: Weak elitism protection - top performers are now preserved correctly across generations
+- Infinite loop bug in breeding logic where `if set1 != set2` condition could hang indefinitely
+- Incomplete random seeding - now seeds both `random` and `numpy.random` for full reproducibility
+- Weak elitism protection - top performers are now preserved correctly across generations
 - Improved breeding algorithm to always produce valid offspring
-- Type annotations now support `dict[str, Any]` for parameters to handle both numeric and categorical values
 
 ## [1.4.0] - Previous Release
 
