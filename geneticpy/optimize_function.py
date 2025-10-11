@@ -1,5 +1,6 @@
 """Main optimization interface for genetic algorithm parameter tuning."""
 
+import random
 from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 from time import time
@@ -38,6 +39,10 @@ def optimize(
     target: float | None = None,
     verbose: bool = False,
     seed: int | None = None,
+    patience: int | None = None,
+    use_tournament_selection: bool = False,
+    tournament_size: int = 3,
+    adaptive_mutation: bool = False,
 ) -> OptimizeResult:
     """
     Run genetic algorithm optimization over a parameter space.
@@ -76,6 +81,17 @@ def optimize(
     seed: Optional[int], default = None
         If specified, the random number generators used to generate new parameter sets will be seeded, resulting in a
         deterministic and repeatable result.
+    patience: Optional[int], default = None
+        Early stopping patience. If specified, optimization stops if no improvement for this many generations.
+        Helps prevent unnecessary computation when convergence is reached.
+    use_tournament_selection: bool, default = False
+        If True, use tournament selection for parent selection during breeding instead of random selection.
+        Tournament selection often provides better selection pressure.
+    tournament_size: int, default = 3
+        Number of individuals competing in each tournament (only used if use_tournament_selection=True).
+    adaptive_mutation: bool, default = False
+        If True, automatically adjust mutation rate based on progress. Increases mutation when stuck,
+        decreases when making steady progress.
 
     Returns
     -------
@@ -105,6 +121,7 @@ def optimize(
     """
     if seed is not None:
         np.random.seed(seed)
+        random.seed(seed)
     if verbose:
         tqdm_total = int(size * (1 + generation_count * (1 - retain_percentage)))
         t = tqdm(desc="Optimizing parameters", total=tqdm_total)
@@ -112,23 +129,70 @@ def optimize(
         t = None
 
     start_time = time()
+
+    # Initial mutation parameters (may be adapted)
+    current_mutate_chance = mutate_chance
+    current_random_spawn = percentage_to_randomly_spawn
+
     pop = Population(
         fn=fn,
         params=param_space,
         size=size,
-        percentage_to_randomly_spawn=percentage_to_randomly_spawn,
-        mutate_chance=mutate_chance,
+        percentage_to_randomly_spawn=current_random_spawn,
+        mutate_chance=current_mutate_chance,
         retain_percentage=retain_percentage,
         maximize_fn=maximize_fn,
         tqdm_obj=t,
         target=target,
+        use_tournament_selection=use_tournament_selection,
+        tournament_size=tournament_size,
     )
 
     top_score = None
+    best_score_ever = None
+    generations_without_improvement = 0
     i = 0
+
     while top_score is None and i < generation_count:
         i += 1
         top_score = pop.evolve()
+
+        # Track best score for early stopping and adaptive parameters
+        current_best = pop.get_top_score()
+
+        # Early stopping with patience
+        if patience is not None:
+            if best_score_ever is None:
+                best_score_ever = current_best
+            else:
+                # Check if we improved
+                improved = (maximize_fn and current_best > best_score_ever) or (
+                    not maximize_fn and current_best < best_score_ever
+                )
+
+                if improved:
+                    best_score_ever = current_best
+                    generations_without_improvement = 0
+                else:
+                    generations_without_improvement += 1
+
+                # Stop if no improvement for 'patience' generations
+                if generations_without_improvement >= patience:
+                    if verbose and t is not None:
+                        t.write(f"Early stopping: no improvement for {patience} generations")
+                    break
+
+        # Adaptive mutation: increase exploration if stuck, decrease if improving
+        if adaptive_mutation:
+            if generations_without_improvement > 5:
+                # Stuck - increase exploration
+                pop.mutate_chance = min(0.8, current_mutate_chance * 1.2)
+                pop.percentage_to_randomly_spawn = min(0.3, current_random_spawn * 1.5)
+            elif generations_without_improvement < 2:
+                # Improving - decrease exploration, increase exploitation
+                pop.mutate_chance = max(0.1, current_mutate_chance * 0.9)
+                pop.percentage_to_randomly_spawn = max(0.01, current_random_spawn * 0.8)
+
     if top_score is None:
         pop.get_final_scores()
 

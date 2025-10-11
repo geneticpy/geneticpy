@@ -21,7 +21,7 @@ class ParameterSet:
 
     Parameters
     ----------
-    params : dict[str, float]
+    params : dict[str, Any]
         Dictionary of parameter names to values.
     param_space : dict[str, DistributionBase]
         Dictionary of parameter distributions defining the search space.
@@ -35,7 +35,7 @@ class ParameterSet:
 
     def __init__(
         self,
-        params: dict[str, float],
+        params: dict[str, Any],
         param_space: dict[str, DistributionBase],
         fn: Callable[[dict[str, Any]], Awaitable[float]],
         maximize_fn: bool,
@@ -61,9 +61,16 @@ class ParameterSet:
         result.tqdm_obj = self.tqdm_obj
         return result
 
-    def mutate(self) -> ParameterSet:
+    def mutate(self, mutation_rate: float = 1.0) -> ParameterSet:
         """
-        Mutate the parameter set by randomly changing one parameter.
+        Mutate the parameter set by randomly changing one or more parameters.
+
+        Parameters
+        ----------
+        mutation_rate : float, optional
+            Controls mutation intensity. If 1.0 (default), mutates exactly one parameter
+            (legacy behavior). If < 1.0, represents probability of mutating each parameter.
+            For example, 0.5 means each parameter has 50% chance of mutating.
 
         Returns
         -------
@@ -72,8 +79,23 @@ class ParameterSet:
         """
         self.score = None
         keys = [k for k, v in self.param_space.items() if isinstance(v, DistributionBase)]
-        param = random.choice(keys)
-        self.params[param] = self.param_space[param].pull_value()
+
+        if mutation_rate >= 1.0:
+            # Legacy behavior: mutate exactly one parameter
+            param = random.choice(keys)
+            self.params[param] = self.param_space[param].pull_value()
+        else:
+            # New behavior: probabilistic mutation of each parameter
+            mutated = False
+            for param in keys:
+                if random.random() < mutation_rate:
+                    self.params[param] = self.param_space[param].pull_value()
+                    mutated = True
+            # Ensure at least one mutation occurred
+            if not mutated and keys:
+                param = random.choice(keys)
+                self.params[param] = self.param_space[param].pull_value()
+
         return self
 
     def breed(self, mate: ParameterSet) -> ParameterSet:
@@ -92,7 +114,11 @@ class ParameterSet:
         """
         child = deepcopy(self)
         child.params = {
-            k: child.param_space[k].pull_constrained_value(v, mate.params[k]) if isinstance(v, DistributionBase) else v
+            k: (
+                child.param_space[k].pull_constrained_value(v, mate.params[k])
+                if k in child.param_space and isinstance(child.param_space[k], DistributionBase)
+                else v
+            )
             for k, v in child.params.items()
         }
         return child
@@ -119,13 +145,13 @@ class ParameterSet:
                 self.tqdm_obj.update()
         return self.score
 
-    def get_params(self) -> dict[str, float]:
+    def get_params(self) -> dict[str, Any]:
         """
         Get the parameter dictionary.
 
         Returns
         -------
-        dict[str, float]
+        dict[str, Any]
             Dictionary of parameter names to values.
         """
         return self.params
