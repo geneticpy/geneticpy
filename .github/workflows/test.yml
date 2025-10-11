@@ -9,28 +9,29 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.11']
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v5
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install .[tests]
+          uv sync --group dev
 
       - name: Test with pytest
         run: |
-          pip install coverage
-          coverage run -m pytest tests/
+          uv run coverage run -m pytest tests/
 
       - name: Codecov
-        # You may pin to the exact commit or the version.
-        # uses: codecov/codecov-action@f32b3a3741e1053eb607407145bc9619351dc93b
-        uses: codecov/codecov-action@v2.1.0
+        uses: codecov/codecov-action@v4

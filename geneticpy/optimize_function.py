@@ -1,5 +1,9 @@
+"""Main optimization interface for genetic algorithm parameter tuning."""
+
+from collections.abc import Awaitable, Callable, Mapping
+from dataclasses import dataclass
 from time import time
-from typing import Any, Dict, Optional, Union
+from typing import Any
 
 import numpy as np
 from tqdm import tqdm
@@ -8,18 +12,36 @@ from geneticpy.distributions import DistributionBase
 from geneticpy.population import Population
 
 
-def optimize(fn: callable,
-             param_space: Dict[str, DistributionBase],
-             size: int = 100,
-             generation_count: int = 10,
-             percentage_to_randomly_spawn: float = 0.1,
-             mutate_chance: float = 0.35,
-             retain_percentage: float = 0.5,
-             maximize_fn: bool = False,
-             target: Optional[float] = None,
-             verbose: bool = False,
-             seed: Optional[int] = None) -> Dict[str, Union[float, Dict[str, Any]]]:
+@dataclass
+class OptimizeResult:
+    """A dataclass representing the result of the optimize function."""
+
+    #: The best parameter set found during the optimization.
+    best_params: dict[str, Any]
+
+    #: The score of the best parameter set found during the optimization.
+    best_score: float
+
+    #: The total time taken to run the optimization, in seconds.
+    total_time: float
+
+
+def optimize(
+    fn: Callable[[dict[str, Any]], float | Awaitable[float]],
+    param_space: Mapping[str, DistributionBase | Any],
+    size: int = 100,
+    generation_count: int = 10,
+    percentage_to_randomly_spawn: float = 0.1,
+    mutate_chance: float = 0.35,
+    retain_percentage: float = 0.5,
+    maximize_fn: bool = False,
+    target: float | None = None,
+    verbose: bool = False,
+    seed: int | None = None,
+) -> OptimizeResult:
     """
+    Run genetic algorithm optimization over a parameter space.
+
     The ``optimize`` function is used to run the genetic algorithm over the specified parameter space in an effort to
     minimize (or maximize if ``maximize_fn=True``) the specified loss[reward] function, ``fn(params)``.
 
@@ -57,50 +79,50 @@ def optimize(fn: callable,
 
     Returns
     -------
-    Dict[str, Union[float, Dict[str, Any]]]:
-        A dictionary containing ``top_params``, ``top_score``, and ``total_time`` keys:
+    OptimizeResult
+        A dataclass containing the optimization results with the following attributes:
 
-        ``top_params``: A dictionary containing the top parameters from the optimization.
-
-        ``top_score``: The score of the ``top_params`` parameter set as determined by the specified ``fn`` function.
-
-        ``total_time``: The total time in seconds that it took to run the optimization.
+        - best_params: The best parameter set found during the optimization.
+        - best_score: The score of the best parameter set.
+        - total_time: The total time taken to run the optimization, in seconds.
 
     Examples
     --------
-    ::
-
-        import geneticpy
-
-        def loss_function(params):
-            if params['type'] == 'add':
-                return params['x'] + params['y']
-            elif params['type'] == 'multiply':
-                return params['x'] * params['y']
-
-        param_space = {'type': geneticpy.ChoiceDistribution(choice_list=['add', 'multiply']),
-                       'x': geneticpy.UniformDistribution(low=5, high=10, q=1),
-                       'y': geneticpy.GaussianDistribution(mean=0, standard_deviation=1, low=-1, high=1)}
-
-        results = geneticpy.optimize(loss_function, param_space)
-        print(results)
-
-        {'top_params': {'type': 'multiply', 'x': 10, 'y': -1},
-         'top_score': -10,
-         'total_time': 0.1290111541748047}
+    >>> import geneticpy
+    >>> def loss_function(params):
+    ...     if params["type"] == "add":
+    ...         return params["x"] + params["y"]
+    ...     elif params["type"] == "multiply":
+    ...         return params["x"] * params["y"]
+    >>> param_space = {
+    ...     "type": geneticpy.ChoiceDistribution(choice_list=["add", "multiply"]),
+    ...     "x": geneticpy.UniformDistribution(low=5, high=10, q=1),
+    ...     "y": geneticpy.GaussianDistribution(mean=0, standard_deviation=1, low=-1, high=1),
+    ... }
+    >>> results = geneticpy.optimize(loss_function, param_space)  # doctest: +SKIP
+    >>> print(results)  # doctest: +SKIP
+    OptimizeResult(top_params={'type': 'add', 'x': 5, 'y': -0.872345}, top_score=4.127655, total_time=12.34)
     """
     if seed is not None:
         np.random.seed(seed)
     if verbose:
         tqdm_total = int(size * (1 + generation_count * (1 - retain_percentage)))
-        t = tqdm(desc='Optimizing parameters', total=tqdm_total)
+        t = tqdm(desc="Optimizing parameters", total=tqdm_total)
     else:
         t = None
 
     start_time = time()
-    pop = Population(fn=fn, params=param_space, size=size, percentage_to_randomly_spawn=percentage_to_randomly_spawn,
-                     mutate_chance=mutate_chance, retain_percentage=retain_percentage, maximize_fn=maximize_fn,
-                     tqdm_obj=t, target=target)
+    pop = Population(
+        fn=fn,
+        params=param_space,
+        size=size,
+        percentage_to_randomly_spawn=percentage_to_randomly_spawn,
+        mutate_chance=mutate_chance,
+        retain_percentage=retain_percentage,
+        maximize_fn=maximize_fn,
+        tqdm_obj=t,
+        target=target,
+    )
 
     top_score = None
     i = 0
@@ -115,8 +137,4 @@ def optimize(fn: callable,
     total_time = time() - start_time
     if t is not None:
         t.close()
-    return {
-        'top_params': top_params,
-        'top_score': top_score,
-        'total_time': total_time
-    }
+    return OptimizeResult(best_params=top_params, best_score=top_score, total_time=total_time)
