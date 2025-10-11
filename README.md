@@ -10,10 +10,22 @@ GeneticPy is an optimizer that uses a genetic algorithm to quickly search throug
 
 ### Installation
 
-GeneticPy requires Python 3.8+
+GeneticPy requires Python 3.10+
 
 ```sh
 pip install geneticpy
+```
+
+### Development Workflow
+
+This project uses [uv](https://github.com/astral-sh/uv) for fast dependency management and [hatchling](https://github.com/pypa/hatch) as the build backend.
+
+```sh
+# Run tests
+make test
+
+# Build the package
+make build
 ```
 
 ### Optimize Example:
@@ -34,9 +46,9 @@ param_space = {'type': geneticpy.ChoiceDistribution(choice_list=['add', 'multipl
                'y': geneticpy.GaussianDistribution(mean=0, standard_deviation=1)}
 
 results = geneticpy.optimize(loss_function, param_space, size=200, generation_count=500, verbose=True)
-best_params = results['top_params']
-loss = results['top_score']
-total_time = results['total_time']
+best_params = results.best_params
+loss = results.best_score
+total_time = results.total_time
 ```
 
 ### PyPi Project

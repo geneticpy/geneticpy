@@ -1,23 +1,23 @@
+"""GeneticPy - A lightweight genetic algorithm optimizer for parameter optimization."""
+
 from geneticpy.distributions import (
-    DistributionBase,
-    UniformDistribution,
-    GaussianDistribution,
     ChoiceDistribution,
+    DistributionBase,
     ExponentialDistribution,
+    GaussianDistribution,
     LogNormalDistribution,
+    UniformDistribution,
 )
 from geneticpy.optimize_function import optimize
 from geneticpy.population import Population
 
-__version__ = "1.4.0"
-
 __all__ = [
-    'optimize',
-    'Population',
-    'UniformDistribution',
-    'GaussianDistribution',
-    'ChoiceDistribution',
-    'ExponentialDistribution',
-    'LogNormalDistribution',
-    'DistributionBase',
+    "ChoiceDistribution",
+    "DistributionBase",
+    "ExponentialDistribution",
+    "GaussianDistribution",
+    "LogNormalDistribution",
+    "Population",
+    "UniformDistribution",
+    "optimize",
 ]

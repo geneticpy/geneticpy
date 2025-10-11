@@ -50,7 +50,13 @@ async def async_fn(params): return params['x'] + params['y']
 
 ## Testing & Build
 
-**Run tests**: `pytest tests/` (uses matrix testing across Python 3.8-3.13)
+**Modern tooling**: Uses `uv` for dependency management and `hatchling` as the build backend
+
+**Install dependencies**: `uv pip install -e .[tests]`
+
+**Run tests**: `pytest tests/` (uses matrix testing across Python 3.10-3.14)
+
+**Build package**: `uv build`
 
 **Dependencies**: Minimal core deps (numpy, tqdm) with optional test/docs extras
 

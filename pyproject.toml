@@ -1,14 +1,15 @@
 [build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling >= 1.27.0"]
+build-backend = "hatchling.build"
 
 [project]
 name = "geneticpy"
 version = "1.4.0"
 description = "GeneticPy is an optimizer that uses a genetic algorithm to quickly search through custom parameter spaces for optimal solutions."
 readme = "README.md"
-requires-python = ">=3.8"
-license = {text = "MIT"}
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [
     {name = "Brandon Schabell", email = "brandonschabell@gmail.com"}
 ]
@@ -17,29 +18,21 @@ classifiers = [
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
-    "Operating System :: Microsoft :: Windows",
-    "Operating System :: POSIX",
-    "Operating System :: Unix",
-    "Operating System :: MacOS",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering",
     "Topic :: Software Development",
     "Topic :: Utilities",
 ]
+keywords = ["genetic algorithm", "optimization", "machine learning", "ai", "artificial intelligence", "data science"]
 dependencies = [
-    "numpy>=1.14.0",
+    "numpy",
     "tqdm",
 ]
-
-[project.optional-dependencies]
-tests = ["pytest", "pandas", "pytest-runner"]
-docs = ["sphinx", "sphinx_rtd_theme", "numpydoc"]
 
 [project.urls]
 Homepage = "https://github.com/geneticpy/geneticpy"
@@ -47,5 +40,89 @@ Documentation = "https://geneticpy.readthedocs.io"
 "Bug Tracker" = "https://github.com/geneticpy/geneticpy/issues"
 "Source Code" = "https://github.com/geneticpy/geneticpy"
 
-[tool.setuptools.packages.find]
-exclude = ["docs*", "tests*"]
+[tool.hatch.build.targets.wheel]
+packages = ["geneticpy"]
+
+[tool.hatch.build.targets.sdist]
+exclude = [
+    "/.github",
+    "/docs",
+    "/tests",
+]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.14.1",
+    "ruff>=0.14.0",
+    "types-tqdm>=4.66.0",
+    "pytest>=8.0.0",
+    "coverage>=7.0.0",
+    "pandas>=2.3.3",
+]
+docs = [
+    "sphinx==8.2.3; python_version >= '3.11'", 
+    "sphinx_rtd_theme==3.0.2; python_version >= '3.11'", 
+    "numpydoc==1.9.0; python_version >= '3.11'"
+]
+
+[tool.ruff]
+src = ["geneticpy", "tests"]
+target-version = "py310"
+line-length = 120
+
+[tool.ruff.lint]
+# Rule sets: pyflakes/pycodestyle, isort, modernity, bugbear, etc.
+select = [
+  "F",             # pyflakes
+  "E", "W",        # pycodestyle
+  "I",             # isort (import sorting via Ruff)
+  "UP",            # pyupgrade
+  "B",             # bugbear
+  "SIM",           # simplify
+  "C4",            # comprehensions
+  "TID",           # tidy imports
+  "RUF",           # ruff-specific
+  "D",             # pydocstyle (docstring conventions)
+]
+ignore = [
+  "E501",          # let formatter handle line length
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Example: test files can be a bit looser
+"tests/**" = ["S101", "D"]  # allow assert in tests, no docstring requirements
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"  # Use NumPy docstring style
+
+[tool.ruff.format]
+# Ruff formatter settings
+docstring-code-format = true
+docstring-code-line-length = 88  # Shorter line length for code in docstrings
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+
+[tool.mypy]
+python_version = "3.10"
+warn_unused_ignores = true
+disallow_untyped_defs = true
+files = ["geneticpy", "tests"]
+
+[tool.pytest.ini_options]
+pythonpath = "."
+testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["geneticpy"]
+omit = ["tests/*", "*/__pycache__/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
