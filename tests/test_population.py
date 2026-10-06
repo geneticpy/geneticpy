@@ -503,3 +503,16 @@ class TestInjectDiversityPreservesElite:
         pop.inject_diversity(percentage=0.2)
 
         assert all(a is b for a, b in zip(pop.population[:19], before[:19], strict=True))
+
+
+class TestTournamentSelectNaN:
+    def test_tournament_select_never_picks_nan(self) -> None:
+        random.seed(0)
+        pop = Population(
+            fn=lambda params: params["x"], params={"x": UniformDistribution(0, 1)}, size=10, maximize_fn=True
+        )
+        for i, ind in enumerate(pop.population):
+            ind.score = float("nan") if i else 0.5
+
+        for _ in range(20):
+            assert pop.tournament_select(tournament_size=10).score == 0.5

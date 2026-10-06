@@ -1,8 +1,11 @@
+import asyncio
+import math
 from asyncio import sleep
 
 import pytest
-from geneticpy import optimize
+from geneticpy import optimize, optimize_async
 from geneticpy.distributions import ChoiceDistribution, GaussianDistribution, UniformDistribution
+from geneticpy.optimize_function import OptimizeResult
 
 
 def test_optimize_simple() -> None:
@@ -230,3 +233,55 @@ def test_target_reached_on_equality() -> None:
     optimize(fn=fn, param_space=param_space, size=10, generation_count=5, target=0.0, seed=0)
 
     assert calls == 10
+
+
+@pytest.mark.parametrize("maximize_fn", [True, False])
+def test_nan_never_reported_as_best(maximize_fn: bool) -> None:
+    def fn(params: dict[str, float]) -> float:
+        return float("nan") if params["x"] > 0.5 else params["x"]
+
+    for seed in range(10):
+        result = optimize(
+            fn, {"x": UniformDistribution(0, 1)}, size=20, generation_count=5, seed=seed, maximize_fn=maximize_fn
+        )
+        assert not math.isnan(result.best_score)
+
+
+def test_constants_only_param_space() -> None:
+    result = optimize(lambda params: params["x"], {"x": 5}, size=10, generation_count=3, seed=0)
+    assert result.best_params == {"x": 5}
+
+
+def test_single_event_loop_per_optimize() -> None:
+    loops: set[asyncio.AbstractEventLoop] = set()
+
+    async def fn(params: dict[str, float]) -> float:
+        loops.add(asyncio.get_running_loop())
+        return params["x"]
+
+    optimize(fn, {"x": UniformDistribution(0, 1)}, size=10, generation_count=5, seed=0)
+    assert len(loops) == 1
+
+
+def test_callable_returning_awaitable() -> None:
+    async def score(params: dict[str, float]) -> float:
+        return params["x"]
+
+    result = optimize(lambda params: score(params), {"x": UniformDistribution(0, 1)}, size=10, generation_count=2)
+    assert 0 <= result.best_score <= 1
+
+
+def test_optimize_async_in_running_loop() -> None:
+    async def main() -> OptimizeResult:
+        return await optimize_async(lambda params: params["x"], {"x": UniformDistribution(0, 1)}, size=10, seed=0)
+
+    result = asyncio.run(main())
+    assert 0 <= result.best_score <= 1
+
+
+def test_optimize_in_running_loop_points_to_optimize_async() -> None:
+    async def main() -> None:
+        optimize(lambda params: params["x"], {"x": UniformDistribution(0, 1)}, size=10)
+
+    with pytest.raises(RuntimeError, match="optimize_async"):
+        asyncio.run(main())

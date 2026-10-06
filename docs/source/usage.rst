@@ -7,4 +7,5 @@ GeneticPy can be used through an ``optimize`` function for general parameter opt
    :toctree: generated
 
     geneticpy.optimize
+    geneticpy.optimize_async
 

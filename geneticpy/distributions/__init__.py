@@ -1,10 +1,27 @@
 """Probability distribution classes for defining parameter spaces in genetic algorithms."""
 
+import math
+from collections.abc import Callable, Iterable
+from statistics import NormalDist
 from typing import Any
 
 import numpy as np
 
 from geneticpy.distributions.distribution_base import DistributionBase
+
+
+def _sample_truncated(
+    cdf: Callable[[float], float], inv_cdf: Callable[[float], float], low: float | None, high: float | None
+) -> float:
+    """Sample from a distribution truncated to [low, high] using inverse transform sampling."""
+    u_low = cdf(low) if low is not None else 0.0
+    u_high = cdf(high) if high is not None else 1.0
+    if low is not None and high is not None and u_high - u_low < 1e-12:
+        # The interval is too far into a tail for the CDF to resolve, so fall back to a uniform draw
+        return float(np.random.uniform(low, high))
+    # Keep u strictly inside (0, 1), where the inverse CDFs are defined
+    u = min(max(np.random.uniform(u_low, u_high), 1e-16), 1 - 1e-16)
+    return inv_cdf(u)
 
 
 class UniformDistribution(DistributionBase):
@@ -87,18 +104,17 @@ class GaussianDistribution(DistributionBase):
         self.high = high
 
     def pull_value(self) -> float:
-        """Pull a random value from the Gaussian distribution."""
-        value = np.random.normal(self.mean, self.standard_deviation)
+        """Pull a random value from the Gaussian distribution, truncated to its bounds."""
+        normal = NormalDist(self.mean, self.standard_deviation)
+        value = _sample_truncated(normal.cdf, normal.inv_cdf, self.low, self.high)
         value = self.constrain(value)
         return self.q_round(value)
 
     def pull_constrained_value(self, low: float, high: float) -> float:
-        """Pull a value from Gaussian centered between low and high bounds."""
+        """Pull a value from the Gaussian distribution truncated to the low and high bounds."""
         low, high = min(low, high), max(low, high)
-        constrained_mean = (high + low) / 2
-        new_mean = (self.mean + constrained_mean) / 2
-        new_standard_deviation = high - low
-        value = np.random.normal(new_mean, new_standard_deviation)
+        normal = NormalDist(self.mean, self.standard_deviation)
+        value = _sample_truncated(normal.cdf, normal.inv_cdf, low, high)
         value = self.constrain(value, low, high)
         return self.q_round(value)
 
@@ -111,8 +127,8 @@ class ChoiceDistribution(DistributionBase):
     ----------
     choice_list : list
         List of possible values to choose from.
-    probabilities : str | list[float], optional
-        Either "uniform" for uniform probability or a list of probabilities (must sum to 1).
+    probabilities : str | Iterable[float], optional
+        Either "uniform" for uniform probability or a sequence of probabilities (must sum to 1).
 
     Examples
     --------
@@ -120,12 +136,10 @@ class ChoiceDistribution(DistributionBase):
     >>> value = dist.pull_value()  # Returns one of the three operations
     """
 
-    def __init__(self, choice_list: list, probabilities: str | list[float] = "uniform") -> None:
+    def __init__(self, choice_list: list, probabilities: str | Iterable[float] = "uniform") -> None:
         assert isinstance(choice_list, list)
         self.choice_list = choice_list
-        self.probabilities: list[float] | None = (
-            None if probabilities == "uniform" else (probabilities if isinstance(probabilities, list) else None)
-        )
+        self.probabilities: list[float] | None = None if isinstance(probabilities, str) else list(probabilities)
 
     def pull_value(self) -> Any:
         """Pull a random choice from the list."""
@@ -170,16 +184,22 @@ class ExponentialDistribution(DistributionBase):
         self.low = low
         self.high = high
 
+    def _cdf(self, x: float) -> float:
+        return -math.expm1(-x / self.scale) if x > 0 else 0.0
+
+    def _inv_cdf(self, u: float) -> float:
+        return -self.scale * math.log1p(-u)
+
     def pull_value(self) -> float:
-        """Pull a random value from the exponential distribution."""
-        value = np.random.exponential(scale=self.scale, size=None)
+        """Pull a random value from the exponential distribution, truncated to its bounds."""
+        value = _sample_truncated(self._cdf, self._inv_cdf, self.low, self.high)
         value = self.constrain(value)
         return self.q_round(value)
 
     def pull_constrained_value(self, low: float, high: float) -> float:
-        """Pull a value from exponential distribution constrained to bounds."""
+        """Pull a value from the exponential distribution truncated to the low and high bounds."""
         low, high = min(low, high), max(low, high)
-        value = self.pull_value()
+        value = _sample_truncated(self._cdf, self._inv_cdf, low, high)
         value = self.constrain(value, low, high)
         return self.q_round(value)
 
@@ -224,15 +244,21 @@ class LogNormalDistribution(DistributionBase):
         self.low = low
         self.high = high
 
+    def _cdf(self, x: float) -> float:
+        return NormalDist(self.mean, self.sigma).cdf(math.log(x)) if x > 0 else 0.0
+
+    def _inv_cdf(self, u: float) -> float:
+        return math.exp(NormalDist(self.mean, self.sigma).inv_cdf(u))
+
     def pull_value(self) -> float:
-        """Pull a random value from the log-normal distribution."""
-        value = np.random.lognormal(mean=self.mean, sigma=self.sigma, size=None)
+        """Pull a random value from the log-normal distribution, truncated to its bounds."""
+        value = _sample_truncated(self._cdf, self._inv_cdf, self.low, self.high)
         value = self.constrain(value)
         return self.q_round(value)
 
     def pull_constrained_value(self, low: float, high: float) -> float:
-        """Pull a value from log-normal distribution constrained to bounds."""
+        """Pull a value from the log-normal distribution truncated to the low and high bounds."""
         low, high = min(low, high), max(low, high)
-        value = self.pull_value()
+        value = _sample_truncated(self._cdf, self._inv_cdf, low, high)
         value = self.constrain(value, low, high)
         return self.q_round(value)
