@@ -1,6 +1,7 @@
 import pytest
 from geneticpy.distributions import (
     ChoiceDistribution,
+    DistributionBase,
     ExponentialDistribution,
     GaussianDistribution,
     LogNormalDistribution,
@@ -198,3 +199,39 @@ class TestLogNormalDistribution:
         dist = LogNormalDistribution(mean=0, sigma=1)
         value = dist.pull_constrained_value(0.8, 0.81)
         assert 0.8 <= value <= 0.81
+
+
+class TestConstrainedValueReversedBounds:
+    """Breeding passes parent values in arbitrary order, so low > high must be handled."""
+
+    @pytest.mark.parametrize(
+        "dist",
+        [
+            GaussianDistribution(mean=0, standard_deviation=1),
+            ExponentialDistribution(scale=2),
+            LogNormalDistribution(mean=0, sigma=1),
+        ],
+    )
+    def test_pull_constrained_value_reversed_bounds(self, dist: DistributionBase) -> None:
+        values = [dist.pull_constrained_value(5, 1) for _ in range(200)]
+        assert all(1 <= v <= 5 for v in values)
+        assert len(set(values)) > 1
+
+
+class TestChoiceDistributionPreservesValues:
+    def test_mixed_types_not_coerced(self) -> None:
+        dist = ChoiceDistribution([True, "a"], [1, 0])
+        assert dist.pull_value() is True
+
+    def test_returns_python_int(self) -> None:
+        dist = ChoiceDistribution([1, 2])
+        assert type(dist.pull_value()) is int
+
+    def test_tuple_choices(self) -> None:
+        dist = ChoiceDistribution([(1, 2), (3, 4)])
+        assert dist.pull_value() in [(1, 2), (3, 4)]
+
+    def test_constrained_tuple_choices(self) -> None:
+        dist = ChoiceDistribution([(1, 2), (3, 4)])
+        value = dist.pull_constrained_value((1, 2), (3, 4))
+        assert value in [(1, 2), (3, 4)]

@@ -215,3 +215,18 @@ def test_async_score() -> None:
     assert best_params["y"] == 0
     assert score < 0.1
     assert 3 < time < 10
+
+
+def test_target_reached_on_equality() -> None:
+    calls = 0
+
+    def fn(params: dict[str, float]) -> float:
+        nonlocal calls
+        calls += 1
+        return 0.0
+
+    param_space = {"x": UniformDistribution(0, 1)}
+
+    optimize(fn=fn, param_space=param_space, size=10, generation_count=5, target=0.0, seed=0)
+
+    assert calls == 10

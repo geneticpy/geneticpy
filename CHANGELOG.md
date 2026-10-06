@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- Breeding of `GaussianDistribution`, `ExponentialDistribution`, and `LogNormalDistribution` parameters collapsed to a single parent's value when the first parent's value was larger than the second's
+- `ChoiceDistribution` returned numpy types instead of the original objects, stringified mixed-type choice lists (e.g. `True` became `'True'`), and raised on lists of tuples
+- `adaptive_mutation` had no effect unless `patience` was also set, and did not compound across generations
+- `target` now stops optimization when a score equal to the target is reached, as documented
+- Mutated individuals could be mutated again within the same generation; `mutate_chance=1.0` caused an infinite loop
+- Diversity injection could replace retained individuals when `retain_percentage` was above 0.9
+
 ## [2.0.0] - 2025-10-11
 
 ### Changed
