@@ -111,3 +111,6 @@ venv.bak/
 
 # uv
 uv.lock
+
+# macOS
+.DS_Store
