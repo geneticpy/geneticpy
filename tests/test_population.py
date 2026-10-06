@@ -1,10 +1,14 @@
 """Tests for new genetic algorithm features added in v2.0."""
 
 import random
+from typing import Any
+from unittest.mock import patch
 
 import numpy as np
+import pytest
 from geneticpy import optimize
 from geneticpy.distributions import ChoiceDistribution, UniformDistribution
+from geneticpy.parameter_set import ParameterSet
 from geneticpy.population import Population
 
 
@@ -354,6 +358,28 @@ class TestAdaptiveMutation:
         # Should still work reasonably well
         assert abs(result.best_params["x"] - 7) < 2.0
 
+    def test_adaptive_mutation_increases_exploration_when_stuck(self) -> None:
+        """Exploration should increase once no improvement is seen, even without patience."""
+        created: list[Population] = []
+
+        class SpyPopulation(Population):
+            def __init__(self, *args: Any, **kwargs: Any) -> None:
+                super().__init__(*args, **kwargs)
+                created.append(self)
+
+        with patch("geneticpy.optimize_function.Population", SpyPopulation):
+            optimize(
+                lambda params: 1.0,
+                {"x": UniformDistribution(0, 10)},
+                size=10,
+                generation_count=10,
+                mutate_chance=0.35,
+                adaptive_mutation=True,
+                seed=42,
+            )
+
+        assert created[0].mutate_chance > 0.35
+
 
 class TestIntegration:
     """Integration tests combining multiple new features."""
@@ -434,3 +460,46 @@ class TestIntegration:
         assert result1.best_params["x"] == result2.best_params["x"]
         assert result1.best_params["y"] == result2.best_params["y"]
         assert result1.best_score == result2.best_score
+
+
+class TestEvolveMutation:
+    def test_each_retained_individual_mutated_at_most_once(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        calls = 0
+        original_mutate = ParameterSet.mutate
+
+        def counting_mutate(self: ParameterSet, mutation_rate: float = 1.0) -> ParameterSet:
+            nonlocal calls
+            calls += 1
+            return original_mutate(self, mutation_rate)
+
+        monkeypatch.setattr(ParameterSet, "mutate", counting_mutate)
+
+        pop = Population(
+            fn=lambda params: params["x"],
+            params={"x": UniformDistribution(0, 100)},
+            size=10,
+            retain_percentage=0.5,
+            mutate_chance=1.0,
+        )
+        expected_elite = sorted(pop.population, key=lambda p: p.params["x"])[:5]
+
+        pop.evolve()
+
+        assert calls == 5
+        assert len(pop.population) == 10
+        assert all(a is b for a, b in zip(pop.population[:5], expected_elite, strict=True))
+
+
+class TestInjectDiversityPreservesElite:
+    def test_inject_diversity_does_not_replace_retained(self) -> None:
+        pop = Population(
+            fn=lambda params: params["x"],
+            params={"x": UniformDistribution(0, 100)},
+            size=20,
+            retain_percentage=0.95,
+        )
+        before = list(pop.population)
+
+        pop.inject_diversity(percentage=0.2)
+
+        assert all(a is b for a, b in zip(pop.population[:19], before[:19], strict=True))

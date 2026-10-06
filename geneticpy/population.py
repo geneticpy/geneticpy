@@ -104,7 +104,7 @@ class Population:
             True if target is achieved, False otherwise.
         """
         return self.target is not None and (
-            (self.maximize_fn and score > self.target) or (not self.maximize_fn and score < self.target)
+            (self.maximize_fn and score >= self.target) or (not self.maximize_fn and score <= self.target)
         )
 
     @staticmethod
@@ -178,16 +178,17 @@ class Population:
 
     def inject_diversity(self, percentage: float = 0.2) -> None:
         """
-        Inject diversity by replacing bottom performers with random individuals.
+        Inject diversity by replacing non-retained (most recently bred) individuals with random individuals.
 
         Parameters
         ----------
         percentage : float, optional
             Fraction of population to replace with random individuals (default 0.2).
         """
-        num_to_replace = int(self.size * percentage)
+        retained_length = int(self.size * self.retain_percentage)
+        num_to_replace = min(int(self.size * percentage), len(self.population) - retained_length)
         if num_to_replace > 0:
-            # Replace worst performers with random individuals
+            # Replace individuals from the end, leaving the retained individuals at the start untouched
             for i in range(num_to_replace):
                 self.population[-(i + 1)] = self.create_random_set()
 
@@ -237,20 +238,13 @@ class Population:
         keep = graded[:retained_length]
 
         # Apply mutations to copies of retained individuals
-        for indiv in keep:
-            if self.mutate_chance > random.random():
-                new_indiv = deepcopy(indiv)
-                keep.append(new_indiv.mutate())
+        mutants = [deepcopy(indiv).mutate() for indiv in keep if self.mutate_chance > random.random()]
 
         # Add random individuals for exploration
-        for _ in range(int(self.size * self.percentage_to_randomly_spawn)):
-            keep.append(self.create_random_set())
+        randoms = [self.create_random_set() for _ in range(int(self.size * self.percentage_to_randomly_spawn))]
 
-        # Elitism: always keep the best individual at the start
-        # Remove excess individuals from the end (not the beginning where elite are)
-        if len(keep) > self.size:
-            # Keep first retained_length (elite) + fill rest with mutations/breeding
-            keep = keep[:retained_length] + keep[retained_length : self.size]
+        # Retained individuals always come first; trim any overflow from the end
+        keep = (keep + randoms + mutants)[: self.size]
 
         # Fill remaining slots with breeding
         while len(keep) < self.size:

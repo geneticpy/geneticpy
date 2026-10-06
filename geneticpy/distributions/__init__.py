@@ -1,5 +1,7 @@
 """Probability distribution classes for defining parameter spaces in genetic algorithms."""
 
+from typing import Any
+
 import numpy as np
 
 from geneticpy.distributions.distribution_base import DistributionBase
@@ -92,8 +94,7 @@ class GaussianDistribution(DistributionBase):
 
     def pull_constrained_value(self, low: float, high: float) -> float:
         """Pull a value from Gaussian centered between low and high bounds."""
-        low = min(low, high)
-        high = max(low, high)
+        low, high = min(low, high), max(low, high)
         constrained_mean = (high + low) / 2
         new_mean = (self.mean + constrained_mean) / 2
         new_standard_deviation = high - low
@@ -126,13 +127,14 @@ class ChoiceDistribution(DistributionBase):
             None if probabilities == "uniform" else (probabilities if isinstance(probabilities, list) else None)
         )
 
-    def pull_value(self) -> float:
+    def pull_value(self) -> Any:
         """Pull a random choice from the list."""
-        return np.random.choice(a=self.choice_list, size=1, p=self.probabilities)[0]
+        index = np.random.choice(len(self.choice_list), p=self.probabilities)
+        return self.choice_list[index]
 
-    def pull_constrained_value(self, low: float, high: float) -> float:
+    def pull_constrained_value(self, low: Any, high: Any) -> Any:
         """Pull a random choice between low and high values."""
-        return np.random.choice(a=[low, high], size=1)[0]
+        return low if np.random.random() < 0.5 else high
 
 
 class ExponentialDistribution(DistributionBase):
@@ -176,6 +178,7 @@ class ExponentialDistribution(DistributionBase):
 
     def pull_constrained_value(self, low: float, high: float) -> float:
         """Pull a value from exponential distribution constrained to bounds."""
+        low, high = min(low, high), max(low, high)
         value = self.pull_value()
         value = self.constrain(value, low, high)
         return self.q_round(value)
@@ -229,6 +232,7 @@ class LogNormalDistribution(DistributionBase):
 
     def pull_constrained_value(self, low: float, high: float) -> float:
         """Pull a value from log-normal distribution constrained to bounds."""
+        low, high = min(low, high), max(low, high)
         value = self.pull_value()
         value = self.constrain(value, low, high)
         return self.q_round(value)
