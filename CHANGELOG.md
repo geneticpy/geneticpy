@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Python 3.15 support
+- `optimize_async` for running an optimization inside an existing event loop (e.g. Jupyter notebooks or async applications)
+- `py.typed` marker so type checkers use GeneticPy's type hints
+
+### Changed
+- `GaussianDistribution`, `ExponentialDistribution`, and `LogNormalDistribution` now sample from the truncated distribution when `low`/`high` are set, instead of clipping out-of-range samples to the bound. Breeding samples between the parents' values instead of mostly copying one parent. Results for a given `seed` will differ from previous versions.
+- Objective functions that return an awaitable (e.g. a lambda wrapping an async function) are now awaited
 
 ### Removed
 - Unused `pandas` dev dependency
@@ -20,6 +26,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `target` now stops optimization when a score equal to the target is reached, as documented
 - Mutated individuals could be mutated again within the same generation; `mutate_chance=1.0` caused an infinite loop
 - Diversity injection could replace retained individuals when `retain_percentage` was above 0.9
+- NaN scores could be reported as the best result, most often when `maximize_fn=True`
+- Quantized (`q`) values could fall outside the distribution's `low`/`high` bounds
+- `optimize` created a new event loop every generation, breaking async objective functions that hold loop-bound resources. Calling it from a running event loop now raises an error pointing to `optimize_async`
+- Parameter spaces containing only constants raised `IndexError`
+- `ChoiceDistribution` ignored tuple probabilities and raised on numpy array probabilities
+- `DeprecationWarning` from `asyncio.iscoroutinefunction`, which is removed in Python 3.16
 
 ## [2.0.0] - 2025-10-11
 

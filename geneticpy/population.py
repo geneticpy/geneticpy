@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+import inspect
+import math
 import random
 from collections.abc import Awaitable, Callable, Mapping
 from copy import deepcopy
@@ -67,14 +69,14 @@ class Population:
     ) -> None:
         assert isinstance(params, dict)
         assert int(retain_percentage * size) >= 1
-        if asyncio.iscoroutinefunction(fn):
-            self.fn = fn
-        else:
 
-            async def _fn_async(*args: Any, **kwargs: Any) -> float:
-                return fn(*args, **kwargs)  # type: ignore[return-value]
+        async def _fn_async(params: dict[str, Any]) -> float:
+            result = fn(params)
+            if inspect.isawaitable(result):
+                return await result
+            return result
 
-            self.fn = _fn_async
+        self.fn = _fn_async
         self.params = params
         self.size = size
         self.maximize_fn = maximize_fn
@@ -106,6 +108,12 @@ class Population:
         return self.target is not None and (
             (self.maximize_fn and score >= self.target) or (not self.maximize_fn and score <= self.target)
         )
+
+    def _sort_key(self, score: float | None) -> float:
+        """Map missing or NaN scores to the worst possible value so they never rank as best."""
+        if score is None or math.isnan(score):
+            return float("-inf") if self.maximize_fn else float("inf")
+        return score
 
     @staticmethod
     async def _evaluate(individual: ParameterSet) -> tuple[float, ParameterSet]:
@@ -212,9 +220,9 @@ class Population:
 
         # Return best from tournament
         if self.maximize_fn:
-            return max(contestants, key=lambda x: x.score if x.score is not None else float("-inf"))
+            return max(contestants, key=lambda x: self._sort_key(x.score))
         else:
-            return min(contestants, key=lambda x: x.score if x.score is not None else float("inf"))
+            return min(contestants, key=lambda x: self._sort_key(x.score))
 
     def evolve(self) -> float | None:
         """
@@ -225,8 +233,19 @@ class Population:
         float | None
             Top score if target achieved, None otherwise.
         """
-        graded_tuples = asyncio.run(self._grade())
-        self.grades = sorted(graded_tuples, key=lambda x: x[0], reverse=self.maximize_fn)
+        return asyncio.run(self.aevolve())
+
+    async def aevolve(self) -> float | None:
+        """
+        Evolve the population by one generation within the running event loop.
+
+        Returns
+        -------
+        float | None
+            Top score if target achieved, None otherwise.
+        """
+        graded_tuples = await self._grade()
+        self.grades = sorted(graded_tuples, key=lambda x: self._sort_key(x[0]), reverse=self.maximize_fn)
         top_score = self.grades[0][0]
         graded = [x[1] for x in self.grades]
 
@@ -270,8 +289,12 @@ class Population:
 
     def get_final_scores(self) -> None:
         """Grade and sort the final population by score."""
-        graded_tuples = asyncio.run(self._grade())
-        self.grades = sorted(graded_tuples, key=lambda x: x[0], reverse=self.maximize_fn)
+        asyncio.run(self.aget_final_scores())
+
+    async def aget_final_scores(self) -> None:
+        """Grade and sort the final population by score within the running event loop."""
+        graded_tuples = await self._grade()
+        self.grades = sorted(graded_tuples, key=lambda x: self._sort_key(x[0]), reverse=self.maximize_fn)
         graded = [x[1] for x in self.grades]
         self.population = graded
 
@@ -284,7 +307,18 @@ class Population:
         float
             Best fitness score in the population.
         """
-        return asyncio.run(self.population[0].get_score())
+        return asyncio.run(self.aget_top_score())
+
+    async def aget_top_score(self) -> float:
+        """
+        Get the score of the top parameter set within the running event loop.
+
+        Returns
+        -------
+        float
+            Best fitness score in the population.
+        """
+        return await self.population[0].get_score()
 
     def get_top_params(self) -> dict[str, Any]:
         """

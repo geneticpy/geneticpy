@@ -8,7 +8,7 @@ from geneticpy.distributions import (
     LogNormalDistribution,
     UniformDistribution,
 )
-from geneticpy.optimize_function import optimize
+from geneticpy.optimize_function import optimize, optimize_async
 from geneticpy.population import Population
 
 __all__ = [
@@ -20,4 +20,5 @@ __all__ = [
     "Population",
     "UniformDistribution",
     "optimize",
+    "optimize_async",
 ]

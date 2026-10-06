@@ -1,3 +1,6 @@
+from collections.abc import Iterable
+
+import numpy as np
 import pytest
 from geneticpy.distributions import (
     ChoiceDistribution,
@@ -235,3 +238,52 @@ class TestChoiceDistributionPreservesValues:
         dist = ChoiceDistribution([(1, 2), (3, 4)])
         value = dist.pull_constrained_value((1, 2), (3, 4))
         assert value in [(1, 2), (3, 4)]
+
+
+class TestChoiceDistributionProbabilities:
+    @pytest.mark.parametrize("probabilities", [(0.0, 1.0), np.array([0.0, 1.0])])
+    def test_non_list_probabilities(self, probabilities: Iterable[float]) -> None:
+        dist = ChoiceDistribution(["a", "b"], probabilities)
+        assert all(dist.pull_value() == "b" for _ in range(100))
+
+
+class TestQuantizationRespectsBounds:
+    def test_uniform_q_stays_in_bounds(self) -> None:
+        dist = UniformDistribution(1, 10, q=4)
+        assert {dist.pull_value() for _ in range(1000)} == {4, 8}
+
+    def test_gaussian_q_stays_in_bounds(self) -> None:
+        dist = GaussianDistribution(0, 10, q=4, low=1, high=10)
+        assert {dist.pull_value() for _ in range(1000)} == {4, 8}
+
+    def test_float_q_bounds_remain_reachable(self) -> None:
+        dist = UniformDistribution(0.1, 0.3, q=0.1)
+        assert len({round(dist.pull_value(), 9) for _ in range(1000)}) == 3
+
+
+class TestTruncatedSampling:
+    @pytest.mark.parametrize(
+        ("dist", "low"),
+        [
+            (GaussianDistribution(mean=0, standard_deviation=1, low=2), 2),
+            (ExponentialDistribution(scale=1, low=3), 3),
+            (LogNormalDistribution(mean=0, sigma=1, low=15), 15),
+        ],
+    )
+    def test_bounded_pull_value_has_no_point_mass(self, dist: DistributionBase, low: float) -> None:
+        values = [dist.pull_value() for _ in range(1000)]
+        assert all(v >= low for v in values)
+        assert len(set(values)) > 990
+
+    @pytest.mark.parametrize(
+        "dist",
+        [
+            GaussianDistribution(mean=0, standard_deviation=1),
+            ExponentialDistribution(scale=1),
+            LogNormalDistribution(mean=0, sigma=1),
+        ],
+    )
+    def test_breeding_does_not_copy_a_parent(self, dist: DistributionBase) -> None:
+        values = [dist.pull_constrained_value(3.0, 6.0) for _ in range(1000)]
+        assert all(3.0 <= v <= 6.0 for v in values)
+        assert sum(v in (3.0, 6.0) for v in values) < 10

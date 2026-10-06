@@ -79,6 +79,8 @@ class ParameterSet:
         """
         self.score = None
         keys = [k for k, v in self.param_space.items() if isinstance(v, DistributionBase)]
+        if not keys:
+            return self
 
         if mutation_rate >= 1.0:
             # Legacy behavior: mutate exactly one parameter

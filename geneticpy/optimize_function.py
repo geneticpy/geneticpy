@@ -1,5 +1,6 @@
 """Main optimization interface for genetic algorithm parameter tuning."""
 
+import asyncio
 import random
 from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
@@ -119,6 +120,63 @@ def optimize(
     >>> print(results)  # doctest: +SKIP
     OptimizeResult(top_params={'type': 'add', 'x': 5, 'y': -0.872345}, top_score=4.127655, total_time=12.34)
     """
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        pass
+    else:
+        raise RuntimeError(
+            "optimize() cannot be called from a running event loop (e.g. a Jupyter notebook). "
+            "Use `await geneticpy.optimize_async(...)` instead."
+        )
+    return asyncio.run(
+        optimize_async(
+            fn=fn,
+            param_space=param_space,
+            size=size,
+            generation_count=generation_count,
+            percentage_to_randomly_spawn=percentage_to_randomly_spawn,
+            mutate_chance=mutate_chance,
+            retain_percentage=retain_percentage,
+            maximize_fn=maximize_fn,
+            target=target,
+            verbose=verbose,
+            seed=seed,
+            patience=patience,
+            use_tournament_selection=use_tournament_selection,
+            tournament_size=tournament_size,
+            adaptive_mutation=adaptive_mutation,
+        )
+    )
+
+
+async def optimize_async(
+    fn: Callable[[dict[str, Any]], float | Awaitable[float]],
+    param_space: Mapping[str, DistributionBase | Any],
+    size: int = 100,
+    generation_count: int = 10,
+    percentage_to_randomly_spawn: float = 0.1,
+    mutate_chance: float = 0.35,
+    retain_percentage: float = 0.5,
+    maximize_fn: bool = False,
+    target: float | None = None,
+    verbose: bool = False,
+    seed: int | None = None,
+    patience: int | None = None,
+    use_tournament_selection: bool = False,
+    tournament_size: int = 3,
+    adaptive_mutation: bool = False,
+) -> OptimizeResult:
+    """
+    Run genetic algorithm optimization over a parameter space within the running event loop.
+
+    This is the asynchronous version of :func:`optimize`, for use where an event loop is already running, such as a
+    Jupyter notebook or an async application. It accepts the same parameters and returns the same result.
+
+    Examples
+    --------
+    >>> results = await geneticpy.optimize_async(loss_function, param_space)  # doctest: +SKIP
+    """
     if seed is not None:
         np.random.seed(seed)
         random.seed(seed)
@@ -151,10 +209,10 @@ def optimize(
 
     while top_score is None and i < generation_count:
         i += 1
-        top_score = pop.evolve()
+        top_score = await pop.aevolve()
 
         # Track best score for early stopping and adaptive parameters
-        current_best = pop.get_top_score()
+        current_best = await pop.aget_top_score()
 
         if best_score_ever is None:
             best_score_ever = current_best
@@ -188,9 +246,9 @@ def optimize(
                 pop.percentage_to_randomly_spawn = max(0.01, pop.percentage_to_randomly_spawn * 0.8)
 
     if top_score is None:
-        pop.get_final_scores()
+        await pop.aget_final_scores()
 
-    top_score = pop.get_top_score()
+    top_score = await pop.aget_top_score()
     top_params = pop.get_top_params()
     total_time = time() - start_time
     if t is not None:

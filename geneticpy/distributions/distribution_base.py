@@ -1,5 +1,6 @@
 """Base class for probability distributions used in genetic algorithm parameter spaces."""
 
+import math
 from abc import ABC, abstractmethod
 
 
@@ -46,6 +47,8 @@ class DistributionBase(ABC):
         """
         Round value to nearest quantization step if q is defined.
 
+        The result is kept within the instance's low and high bounds, if available.
+
         Parameters
         ----------
         value : float
@@ -58,7 +61,16 @@ class DistributionBase(ABC):
         """
         q = getattr(self, "q", None)
         if q is not None:
-            value = round(value / q) * q
+            step = round(value / q)
+            # Rounding can step past a bound; clamp to the nearest in-bounds step. The small tolerance keeps
+            # bounds that are themselves multiples of q (e.g. 0.3 with q=0.1) reachable despite float error.
+            low = getattr(self, "low", None)
+            high = getattr(self, "high", None)
+            if low is not None:
+                step = max(step, math.ceil(low / q - 1e-9))
+            if high is not None:
+                step = min(step, math.floor(high / q + 1e-9))
+            value = step * q
         return value
 
     def constrain(self, value: float, low: float | None = None, high: float | None = None) -> float:
