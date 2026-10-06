@@ -54,7 +54,7 @@ async def async_fn(params): return params['x'] + params['y']
 
 **Install dependencies**: `uv pip install -e .[tests]`
 
-**Run tests**: `pytest tests/` (uses matrix testing across Python 3.10-3.14)
+**Run tests**: `pytest tests/` (uses matrix testing across Python 3.10-3.15)
 
 **Build package**: `uv build`
 
